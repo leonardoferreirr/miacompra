@@ -43,7 +43,6 @@ body{
 img{display:block;max-width:100%}
 a{color:inherit;text-decoration:none}
 .wrap{width:min(100% - 2.6rem,var(--maxw));margin-inline:auto}
-.fw{width:min(100% - 2.6rem,1340px);margin-inline:auto}
 
 /* ============ TYPE ============ */
 h1,h2,h3,h4{font-weight:300;line-height:1.04;letter-spacing:-.025em;color:var(--white)}
@@ -52,9 +51,6 @@ h2{font-size:clamp(2rem,4.6vw,3.4rem)}
 h3{font-size:1.2rem;letter-spacing:-.01em;line-height:1.3}
 .em{font-weight:400;color:var(--yellow)}
 .em-coral{font-weight:400;color:var(--coral)}
-.kicker{font-weight:500;font-size:.74rem;letter-spacing:.32em;text-transform:uppercase;color:var(--yellow)}
-.kicker.coral{color:var(--coral-soft)}
-.kicker.ink{color:var(--blue)}
 .lead{font-size:clamp(1.04rem,1.5vw,1.18rem);font-weight:300;color:var(--on-dark);line-height:1.65}
 .on-light h1,.on-light h2,.on-light h3,.on-light h4{color:var(--ink)}
 .on-light .lead{color:var(--ink-soft)}
@@ -62,11 +58,11 @@ h3{font-size:1.2rem;letter-spacing:-.01em;line-height:1.3}
 
 /* ============ BG SYSTEM (dark) ============ */
 .skin{position:relative}
-.skin::before{ /* dollar pattern */
+.skin::before{
   content:"";position:absolute;inset:0;opacity:.04;pointer-events:none;z-index:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Ctext x='24' y='90' font-family='Montserrat,sans-serif' font-size='78' font-weight='500' fill='%23FDC60B'%3E%24%3C/text%3E%3Ctext x='150' y='210' font-family='Montserrat,sans-serif' font-size='78' font-weight='500' fill='%23FDC60B'%3E%24%3C/text%3E%3C/svg%3E");
 }
-.skin::after{ /* grain */
+.skin::after{
   content:"";position:absolute;inset:0;opacity:.05;pointer-events:none;z-index:0;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
 }
@@ -85,11 +81,23 @@ h3{font-size:1.2rem;letter-spacing:-.01em;line-height:1.3}
 .btn-ink .arw{background:rgba(255,255,255,.16)}
 .btn-ink:hover{transform:translateY(-3px);box-shadow:0 22px 44px -16px rgba(10,31,92,.5)}
 .btn-lg{padding:1.18rem 2.1rem;font-size:1.02rem}
-/* beam ring on primary */
-.btn-beam{isolation:isolate}
-.btn-beam::before{content:"";position:absolute;inset:-2px;border-radius:100px;padding:2px;background:conic-gradient(from 0deg,transparent 0 200deg,var(--coral) 300deg,var(--white) 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 5s linear infinite;opacity:.0;transition:opacity .4s;z-index:-1}
-.btn-beam:hover::before{opacity:1}
+
+/* beam button — port do botão de leonardoferreirr.com.br, tematizado amarelo */
+.shimmer-btn-wrapper{position:relative;display:inline-flex;vertical-align:middle}
+.shimmer-btn-wrapper .glow-bg{position:absolute;inset:-4px;background:rgba(253,198,11,.32);border-radius:9999px;filter:blur(12px);opacity:0;transition:opacity .5s ease;z-index:0}
+.shimmer-btn-wrapper:hover .glow-bg{opacity:1;animation:ping-glow 2s infinite}
+@keyframes ping-glow{0%{box-shadow:0 0 0 0 rgba(253,198,11,.55)}70%{box-shadow:0 0 0 16px rgba(253,198,11,0)}100%{box-shadow:0 0 0 0 rgba(253,198,11,0)}}
+@keyframes shimmer{from{transform:translateX(-100%) skewX(-15deg)}to{transform:translateX(200%) skewX(-15deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+.ds-btn-beam{position:relative;z-index:10;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:9999px;padding:2px;line-height:1;text-decoration:none;background:transparent;border:none;cursor:pointer}
+.ds-btn-beam-bg{position:absolute;top:-1000%;bottom:-1000%;left:-1000%;right:-1000%;background:conic-gradient(from 0deg,transparent 0 330deg,#fff 360deg);animation:spin 3s linear infinite;z-index:0}
+.ds-btn-beam-inner{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;padding:1.12rem 2rem;background:var(--yellow);transition:background .3s ease;gap:.6rem}
+.ds-btn-beam-shimmer{position:absolute;inset:0;overflow:hidden;border-radius:9999px;z-index:2}
+.ds-btn-beam-shimmer::before{content:'';position:absolute;top:0;left:0;height:100%;width:100%;transform:skewX(-12deg);background:linear-gradient(to right,transparent,rgba(255,255,255,.55),transparent);opacity:0;transition:opacity .3s}
+.ds-btn-beam:hover .ds-btn-beam-shimmer::before{opacity:1;animation:shimmer 1.5s infinite}
+.beam-label{position:relative;z-index:3;display:inline-flex;align-items:center;gap:.6rem;font-weight:500;font-size:1.02rem;letter-spacing:.01em;color:var(--deep-2);white-space:nowrap}
+.beam-label .arw{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:rgba(10,31,92,.16);transition:transform .4s var(--ease)}
+.ds-btn-beam:hover .beam-label .arw{transform:translateX(3px)}
 
 /* ============ NAV ============ */
 .nav{position:fixed;inset:0 0 auto 0;z-index:100;padding:1.1rem 0;transition:.45s var(--ease)}
@@ -107,30 +115,20 @@ h3{font-size:1.2rem;letter-spacing:-.01em;line-height:1.3}
 .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.5rem}
 .burger span{width:22px;height:2px;background:#fff;border-radius:2px}
 
-/* ============ HERO ============ */
-.hero{position:relative;overflow:hidden;padding:9.5rem 0 4.5rem;
-  background:
-    radial-gradient(ellipse 900px 680px at 82% 22%,rgba(253,198,11,.16),transparent 60%),
-    radial-gradient(ellipse 1100px 820px at 8% 88%,rgba(255,107,71,.13),transparent 58%),
-    linear-gradient(168deg,var(--blue) 0%,var(--deep) 52%,var(--deep-2) 100%);
-}
-.hero-grid{display:grid;grid-template-columns:1.06fr .94fr;gap:3.5rem;align-items:center}
-.hero h1{margin:1.5rem 0 1.6rem}
+/* ============ HERO (full-bleed foto) ============ */
+.hero{position:relative;overflow:hidden;min-height:94vh;display:flex;align-items:center;background-color:var(--deep-2)}
+.hero-bg-img{position:absolute;inset:0;background-image:url('assets/hero-abuela.jpg');background-size:cover;background-position:72% center;background-attachment:fixed;z-index:0}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(98deg,rgba(4,18,61,.96) 0%,rgba(4,18,61,.86) 28%,rgba(6,26,80,.5) 60%,rgba(6,26,80,.18) 100%)}
+.hero-in{position:relative;z-index:2;width:100%;padding:9rem 0 5rem}
+.hero-copy{max-width:38rem}
+.hero h1{margin:0 0 1.6rem}
 .hero .lead{max-width:33rem}
 .hero-actions{display:flex;gap:.9rem;flex-wrap:wrap;align-items:center;margin:2.3rem 0 2.1rem}
 .hero-mini{display:flex;gap:.65rem 1.5rem;flex-wrap:wrap}
 .hero-mini .m{display:flex;align-items:center;gap:.5rem;font-size:.88rem;font-weight:300;color:var(--on-dark)}
 .hero-mini .m svg{width:18px;height:18px;stroke:var(--yellow);fill:none;stroke-width:1.8;flex-shrink:0}
-.hero-media{position:relative;display:flex;justify-content:center;align-items:center}
-.hero-box{width:100%;max-width:460px;filter:drop-shadow(0 40px 60px rgba(0,0,0,.5));will-change:transform;-webkit-mask-image:radial-gradient(ellipse 80% 84% at 50% 50%,#000 58%,transparent 92%);mask-image:radial-gradient(ellipse 80% 84% at 50% 50%,#000 58%,transparent 92%)}
-.hero-stamp{position:absolute;top:2%;right:2%;width:140px;height:140px;animation:floaty 7s ease-in-out infinite}
-.hero-glow{position:absolute;width:74%;height:74%;border-radius:50%;background:radial-gradient(circle,rgba(253,198,11,.28),transparent 70%);filter:blur(36px);z-index:-1}
-@keyframes floaty{0%,100%{transform:translateY(0) rotate(-12deg)}50%{transform:translateY(-12px) rotate(-12deg)}}
 
-/* stamp svg */
-.stamp svg{width:100%;height:100%}
-
-/* ============ MARQUEE ============ */
+/* ============ MARQUEE selos ============ */
 .marq{padding:1.5rem 0;border-top:1px solid var(--line-dark);border-bottom:1px solid var(--line-dark);overflow:hidden;background:var(--deep-2)}
 .marq-track{display:flex;gap:3rem;align-items:center;width:max-content;animation:scrollX 42s linear infinite}
 .marq:hover .marq-track{animation-play-state:paused}
@@ -144,14 +142,11 @@ section{position:relative}
 .sec{padding:6.5rem 0}
 .sec-head{max-width:44rem;margin-bottom:3.4rem}
 .sec-head.center{margin-inline:auto;text-align:center}
-.sec-head .kicker{display:block;margin-bottom:1.1rem}
 .sec-head h2{margin-bottom:1.1rem}
-
-/* dark section base */
 .s-dark{background:linear-gradient(180deg,var(--deep-2),var(--deep-3))}
 .s-blue{background:linear-gradient(180deg,var(--deep),var(--deep-2))}
 
-/* ============ WEDGE (compare) ============ */
+/* ============ WEDGE ============ */
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
 .cmp-card{border-radius:var(--radius);padding:2.4rem;border:1px solid var(--line-dark);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .cmp-old{background:rgba(255,255,255,.03)}
@@ -176,7 +171,6 @@ section{position:relative}
 .precio-points .p{display:flex;gap:.75rem;align-items:center;font-weight:400;color:var(--ink);font-size:1.02rem}
 .precio-points .p svg{width:20px;height:20px;stroke:var(--green);fill:none;stroke-width:2;flex-shrink:0}
 .precio-cta{margin-top:2.2rem}
-
 .receipt-wrap{position:relative;display:flex;justify-content:center}
 .receipt{position:relative;width:100%;max-width:440px;background:var(--white);border-radius:14px;transform:rotate(-2.4deg);
   box-shadow:0 2px 0 rgba(0,0,0,.04),0 50px 90px -36px rgba(4,18,61,.5),inset 0 0 0 1px rgba(10,31,92,.05);
@@ -206,6 +200,7 @@ section{position:relative}
 .rc-foot{margin-top:1.4rem;padding-top:1.1rem;border-top:1px dashed rgba(10,31,92,.16);display:flex;align-items:center;gap:.6rem;font-weight:500;font-size:.92rem;letter-spacing:.02em;color:var(--ink)}
 .rc-foot .ub{border-bottom:3px solid var(--yellow);padding-bottom:3px}
 .receipt-stamp{position:absolute;bottom:-26px;right:-18px;width:128px;height:128px;transform:rotate(-14deg);z-index:5;filter:drop-shadow(0 12px 22px rgba(4,18,61,.3))}
+.stamp svg{width:100%;height:100%}
 
 /* ============ SERVICIOS ============ */
 .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.3rem}
@@ -254,28 +249,17 @@ section{position:relative}
 .gcard .big{font-weight:300;font-size:1.5rem;color:var(--yellow);letter-spacing:-.01em;line-height:1.1}
 .gcard .sm{font-weight:300;font-size:.84rem;color:rgba(255,255,255,.7);margin-top:.35rem;line-height:1.4}
 
-/* ============ SOBRE ============ */
-.sobre-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:3.6rem;align-items:center}
-.sobre-media{position:relative}
-.sobre-photo{border-radius:28px;overflow:hidden;max-width:380px;box-shadow:0 50px 90px -42px rgba(0,0,0,.65);position:relative}
-.sobre-photo img{width:100%;display:block}
-.sobre-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(4,18,61,.45))}
-.sobre-quote{position:absolute;left:-14px;bottom:24px;background:var(--coral);color:#fff;padding:.85rem 1.2rem;border-radius:14px;font-weight:400;font-size:.92rem;max-width:14rem;line-height:1.4;box-shadow:0 24px 50px -20px rgba(255,107,71,.6)}
-.creds{margin-top:2rem;display:grid;gap:.95rem}
-.cred{display:flex;gap:.85rem;align-items:flex-start;font-weight:300;font-size:1.02rem;color:var(--on-dark)}
-.cred svg{width:21px;height:21px;stroke:var(--yellow);fill:none;stroke-width:1.9;flex-shrink:0;margin-top:3px}
-.cred b{font-weight:400;color:var(--white)}
-
-/* ============ TESTIMONIOS ============ */
-.tst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.3rem}
-.tst{background:rgba(255,255,255,.04);border:1px solid var(--line-dark);border-radius:var(--radius);padding:2rem 1.9rem;display:flex;flex-direction:column;gap:1.2rem;transition:.5s var(--ease)}
-.tst:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.2)}
+/* ============ TESTIMONIOS (carrossel infinito) ============ */
+.tst-marq{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.tst-track{display:flex;gap:1.3rem;width:max-content;animation:tmarq 64s linear infinite}
+.tst-marq:hover .tst-track{animation-play-state:paused}
+@keyframes tmarq{from{transform:translateX(0)}to{transform:translateX(calc(-50% - .65rem))}}
+.tst{flex:0 0 360px;max-width:84vw;background:rgba(255,255,255,.04);border:1px solid var(--line-dark);border-radius:var(--radius);padding:2rem 1.9rem;display:flex;flex-direction:column;gap:1.2rem}
 .tst .stars{display:flex;gap:.2rem}
 .tst .stars svg{width:16px;height:16px;fill:var(--yellow)}
 .tst p{font-weight:300;font-size:1rem;color:var(--white);line-height:1.6}
 .tst .who{display:flex;align-items:center;gap:.75rem;margin-top:auto}
-.tst .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(150deg,var(--yellow),var(--coral));display:grid;place-items:center;font-weight:500;font-size:1rem;color:var(--deep-2);flex-shrink:0;overflow:hidden}
-.tst .av img{width:100%;height:100%;object-fit:cover}
+.tst .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(150deg,var(--yellow),var(--coral));display:grid;place-items:center;font-weight:500;font-size:1rem;color:var(--deep-2);flex-shrink:0}
 .tst .who .nm{font-weight:400;font-size:.92rem;color:var(--white)}
 .tst .who .lo{font-weight:300;font-size:.8rem;color:var(--on-dark-soft)}
 
@@ -297,6 +281,7 @@ section{position:relative}
   text-align:center;padding:6.5rem 0}
 .final h2{max-width:24rem;margin:0 auto 1.2rem}
 .final .lead{max-width:34rem;margin:0 auto 2.4rem;color:var(--on-dark)}
+.final-cta{display:flex;justify-content:center}
 .final-contact{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:3.4rem;text-align:left;max-width:880px;margin-inline:auto}
 .fc{background:rgba(8,20,52,.4);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:20px;padding:1.5rem 1.5rem}
 .fc .ic{width:42px;height:42px;border-radius:12px;background:rgba(253,198,11,.16);display:grid;place-items:center;margin-bottom:.9rem}
@@ -334,10 +319,8 @@ section{position:relative}
 
 /* ============ RESPONSIVE ============ */
 @media(max-width:1000px){
-  .hero-grid,.precio-grid,.enviar-grid,.sobre-grid{grid-template-columns:1fr;gap:2.8rem}
-  .hero-media{order:-1;max-width:380px;margin-inline:auto}
-  .sobre-media{max-width:360px;margin-inline:auto}
-  .svc-grid,.tst-grid{grid-template-columns:1fr 1fr}
+  .precio-grid,.enviar-grid{grid-template-columns:1fr;gap:2.8rem}
+  .svc-grid{grid-template-columns:1fr 1fr}
   .footer-grid{grid-template-columns:1fr 1fr}
   .final-contact{grid-template-columns:1fr}
   .sec{padding:5rem 0}
@@ -347,13 +330,25 @@ section{position:relative}
   .nav-links{display:none}
   .burger{display:flex}
   .nav-cta{display:none}
-  .hero{padding:8rem 0 3.5rem}
-  .cmp,.svc-grid,.tst-grid,.footer-grid{grid-template-columns:1fr}
+  .hero{min-height:auto}
+  .hero-bg-img{background-position:center;background-attachment:scroll}
+  .hero::after{background:linear-gradient(180deg,rgba(4,18,61,.66) 0%,rgba(4,18,61,.8) 52%,rgba(4,18,61,.95) 100%)}
+  .hero-in{padding:7.5rem 0 3.5rem}
+  .cmp,.footer-grid{grid-template-columns:1fr}
+  /* servicios: sticky-stack (um sobe em cima do outro) */
+  .svc-grid{display:block;padding-bottom:1rem}
+  .svc{position:sticky;margin-bottom:1.1rem;background:#0b1f4d}
+  .svc:nth-child(1){top:84px}
+  .svc:nth-child(2){top:98px}
+  .svc:nth-child(3){top:112px}
+  .svc:nth-child(4){top:126px}
+  .svc:nth-child(5){top:140px}
+  .svc:nth-child(6){top:154px}
   .road{padding-left:42px}
   .road::before,.road-fill{left:15px}
   .step::before{left:-34px;width:14px;height:14px}
   .receipt{transform:rotate(-1.5deg);max-width:none}
-  .precio-stats,.para-stats{gap:.7rem}
+  .para-stats{gap:.7rem}
   .gcard{min-width:140px;flex:1}
   .f-legal{flex-direction:column}
   .wfloat .lb{display:none}
@@ -381,16 +376,23 @@ section{position:relative}
 </header>
 
 <!-- ============ HERO ============ -->
-<section class="hero skin" id="top">
-  <div class="wrap hero-grid">
+<section class="hero" id="top">
+  <div class="hero-bg-img"></div>
+  <div class="wrap hero-in">
     <div class="hero-copy rv">
-      <span class="kicker">Tu pana venezolano · desde Estados Unidos</span>
       <h1>Lo que tu familia te quiere mandar, <span class="em">ya está en camino.</span></h1>
       <p class="lead">Llevamos tus compras y encomiendas desde Estados Unidos hasta la puerta de tu casa en Venezuela. Con un precio cerrado desde el primer mensaje, sin sorpresas al final.</p>
       <div class="hero-actions">
-        <a class="btn btn-y btn-beam btn-lg" data-wa data-msg="Hola Mia Compra, quiero cotizar un envío de Estados Unidos a Venezuela.">Cotiza por WhatsApp
-          <span class="arw"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-        </a>
+        <span class="shimmer-btn-wrapper">
+          <span class="glow-bg"></span>
+          <a class="ds-btn-beam" data-wa data-msg="Hola Mia Compra, quiero cotizar un envío de Estados Unidos a Venezuela.">
+            <span class="ds-btn-beam-bg"></span>
+            <span class="ds-btn-beam-inner">
+              <span class="ds-btn-beam-shimmer"></span>
+              <span class="beam-label">Cotiza por WhatsApp <span class="arw"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+            </span>
+          </a>
+        </span>
         <a class="btn btn-glass btn-lg" href="#como">Cómo funciona</a>
       </div>
       <div class="hero-mini">
@@ -398,27 +400,6 @@ section{position:relative}
         <span class="m"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Seguro incluido</span>
         <span class="m"><svg viewBox="0 0 24 24"><path d="M3 16V8a2 2 0 0 1 2-2h9l5 5v5"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg>Aéreo y marítimo</span>
       </div>
-    </div>
-    <div class="hero-media rv" data-d="1">
-      <span class="hero-glow"></span>
-      <img class="hero-box" src="assets/box-hero.jpg" alt="Caja Mia Compra de Estados Unidos a Venezuela">
-      <span class="hero-stamp stamp" aria-hidden="true">
-        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="110" cy="110" r="100" fill="none" stroke="#FF6B47" stroke-width="3.5" stroke-dasharray="4 6"/>
-          <circle cx="110" cy="110" r="86" fill="#FF6B47" opacity="0.1"/>
-          <path id="rt" d="M 30 110 A 80 80 0 0 1 190 110" fill="none"/>
-          <text font-family="Montserrat" font-size="13.5" font-weight="500" fill="#FF6B47" letter-spacing="3"><textPath href="#rt" startOffset="50%" text-anchor="middle">★ TU PANA VENEZOLANO ★</textPath></text>
-          <path id="rb" d="M 30 110 A 80 80 0 0 0 190 110" fill="none"/>
-          <text font-family="Montserrat" font-size="13.5" font-weight="500" fill="#FF6B47" letter-spacing="3"><textPath href="#rb" startOffset="50%" text-anchor="middle">DESDE EE.UU · 2026</textPath></text>
-          <g transform="translate(110,105)">
-            <path d="M -16 -30 Q -16 -42 -4 -42 L 4 -42 Q 16 -42 16 -30 L 16 -16" fill="none" stroke="#FF6B47" stroke-width="5" stroke-linecap="round"/>
-            <path d="M -36 -16 L 36 -16 L 32 38 Q 32 44 26 44 L -26 44 Q -32 44 -32 38 Z" fill="#FF6B47"/>
-            <circle cx="-10" cy="6" r="3.5" fill="#fff"/>
-            <path d="M 5 6 L 18 6" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-            <path d="M -12 18 Q 0 30 14 18" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-          </g>
-        </svg>
-      </span>
     </div>
   </div>
 </section>
@@ -441,7 +422,6 @@ section{position:relative}
 <section class="sec s-dark skin">
   <div class="wrap">
     <div class="sec-head center rv">
-      <span class="kicker">La diferencia</span>
       <h2>Enviar a Venezuela no tiene que ser <span class="em">un dolor de cabeza.</span></h2>
       <p class="lead" style="margin-inline:auto">Conoces el cuento: el precio cambia al final, te toca rogar para saber dónde va tu caja y aparecen cobros que nadie te avisó. Con nosotros es al revés.</p>
     </div>
@@ -472,8 +452,7 @@ section{position:relative}
 <section class="sec precio on-light" id="precio">
   <div class="wrap precio-grid">
     <div class="rv">
-      <span class="kicker ink">Precio cerrado</span>
-      <h2 style="margin:1.1rem 0 1.2rem">El precio del final <span class="em">es el del principio.</span></h2>
+      <h2 style="margin-bottom:1.2rem">El precio del final <span class="em">es el del principio.</span></h2>
       <p class="lead">Sin letra pequeña, sin sustos en la aduana. Te cerramos el precio antes de enviar y ese es el que pagas. Todo lo demás ya viene adentro.</p>
       <div class="precio-points">
         <div class="p"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Tarifa de envío</div>
@@ -533,7 +512,6 @@ section{position:relative}
 <section class="sec s-blue skin" id="servicios">
   <div class="wrap">
     <div class="sec-head center rv">
-      <span class="kicker">Servicios</span>
       <h2>Todo lo que necesitas para que <span class="em">tu caja llegue.</span></h2>
     </div>
     <div class="svc-grid">
@@ -575,7 +553,6 @@ section{position:relative}
 <section class="sec s-dark skin" id="como">
   <div class="wrap">
     <div class="sec-head center rv">
-      <span class="kicker">Cómo funciona</span>
       <h2>Así de fácil es enviar <span class="em">con tu pana.</span></h2>
     </div>
     <div class="road" id="road">
@@ -608,8 +585,7 @@ section{position:relative}
 <section class="sec enviar on-light">
   <div class="wrap enviar-grid">
     <div class="rv">
-      <span class="kicker ink">Qué puedes enviar</span>
-      <h2 style="margin:1.1rem 0 1.2rem">Desde los remedios de tu mamá hasta <span class="em">los zapatos que te encargaron.</span></h2>
+      <h2 style="margin-bottom:1.2rem">Desde los remedios de tu mamá hasta <span class="em">los zapatos que te encargaron.</span></h2>
       <p class="lead">Si cabe en una caja y lo necesita tu gente, nosotros lo llevamos. Esto es lo que más viaja con nosotros:</p>
       <div class="chips">
         <span class="chip"><span class="d"></span>Medicinas y fórmula infantil</span>
@@ -635,8 +611,7 @@ section{position:relative}
   <div class="para-bg" id="paraBg"></div>
   <div class="wrap para-in">
     <div class="rv">
-      <span class="kicker coral">Lo que de verdad importa</span>
-      <h2 style="margin-top:1.1rem">Cada caja que llega es un abrazo <span class="em-coral">que cruzó el mar.</span></h2>
+      <h2>Cada caja que llega es un abrazo <span class="em-coral">que cruzó el mar.</span></h2>
       <p class="lead">Detrás de cada envío hay una familia esperando en la puerta. Por eso cuidamos tu caja como si fuera la nuestra, desde que sale de Estados Unidos hasta que llega a Venezuela.</p>
       <div class="para-stats">
         <div class="gcard"><div class="big">Aéreo y marítimo</div><div class="sm">Tú eliges según tu apuro y tu bolsillo</div></div>
@@ -647,51 +622,52 @@ section{position:relative}
   </div>
 </section>
 
-<!-- ============ SOBRE / CONFIANZA ============ -->
-<section class="sec s-dark skin">
-  <div class="wrap sobre-grid">
-    <div class="sobre-media rv">
-      <div class="sobre-photo">
-        <img src="assets/abuela.jpg" alt="Familia venezolana que recibe con Mia Compra">
-      </div>
-      <span class="sobre-quote">"Mi familia recibe como si yo estuviera ahí."</span>
-    </div>
-    <div class="rv" data-d="1">
-      <span class="kicker">Por qué confiar</span>
-      <h2 style="margin:1.1rem 0 1.3rem">Somos los mismos de Latinship, <span class="em">ahora para tu familia.</span></h2>
-      <p class="lead">Mia Compra nace de Latinship, la operación de logística que ya mueve carga entre Estados Unidos y Venezuela todos los días. La misma seriedad, el mismo almacén, el mismo equipo que se sabe la aduana de memoria. La diferencia es que ahora te hablamos a ti, de tú a tú, como tu pana.</p>
-      <div class="creds">
-        <div class="cred"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg><span><b>Almacén propio</b> en Estados Unidos para recibir tus compras.</span></div>
-        <div class="cred"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg><span><b>Salidas todas las semanas</b>, aéreo y marítimo.</span></div>
-        <div class="cred"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span><b>Rastreo en tiempo real</b> para que sigas tu caja.</span></div>
-        <div class="cred"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span><b>Un equipo que responde rápido</b> y te explica todo claro.</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ TESTIMONIOS ============ -->
+<!-- ============ TESTIMONIOS (carrossel infinito) ============ -->
 <section class="sec s-blue skin">
-  <div class="wrap">
-    <div class="sec-head center rv">
-      <span class="kicker">Lo que dice tu gente</span>
-      <h2>Familias que ya reciben <span class="em">con nosotros.</span></h2>
-    </div>
-    <div class="tst-grid">
-      <article class="tst rv">
+  <div class="wrap" style="text-align:center;margin-bottom:3rem">
+    <div class="rv"><h2>Familias que ya reciben <span class="em">con nosotros.</span></h2></div>
+  </div>
+  <div class="tst-marq">
+    <div class="tst-track" id="tstTrack">
+      <article class="tst">
         <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
         <p>"Le mandé las medicinas a mi mamá y llegaron en una semana, sin que pagara ni un bolívar de más. Me escribieron por WhatsApp en cada paso."</p>
         <div class="who"><span class="av">Y</span><div><div class="nm">Yelitza R.</div><div class="lo">Maracaibo, Venezuela</div></div></div>
       </article>
-      <article class="tst rv" data-d="1">
+      <article class="tst">
         <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
         <p>"Compré en Amazon y lo mandé al casillero. En dos semanas mi hijo tenía su laptop en Valencia, al precio exacto que me dijeron."</p>
         <div class="who"><span class="av">C</span><div><div class="nm">Carlos M.</div><div class="lo">Envía desde Houston, EE.UU</div></div></div>
       </article>
-      <article class="tst rv" data-d="2">
+      <article class="tst">
         <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
         <p>"Por fin alguien que te explica todo claro, nada de letra chiquita. Ya es mi pana de confianza para mandarle cosas a la familia."</p>
         <div class="who"><span class="av">A</span><div><div class="nm">Andreína P.</div><div class="lo">Caracas, Venezuela</div></div></div>
+      </article>
+      <article class="tst">
+        <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+        <p>"Mandé ropa y juguetes para mis sobrinos en Barquisimeto. Llegó todo en perfecto estado y antes de Navidad. Mil gracias, Mia."</p>
+        <div class="who"><span class="av">G</span><div><div class="nm">Génesis L.</div><div class="lo">Envía desde Orlando, EE.UU</div></div></div>
+      </article>
+      <article class="tst">
+        <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+        <p>"Necesitaba un repuesto del carro que aquí no se conseguía. En Mia lo recibieron y me lo mandaron rapidísimo a Valencia."</p>
+        <div class="who"><span class="av">J</span><div><div class="nm">José Gregorio T.</div><div class="lo">Valencia, Venezuela</div></div></div>
+      </article>
+      <article class="tst">
+        <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+        <p>"La fórmula de mi bebé llegó sin un solo problema. Me dio paz saber el precio exacto desde el principio, sin sorpresas."</p>
+        <div class="who"><span class="av">M</span><div><div class="nm">Mariangel C.</div><div class="lo">Caracas, Venezuela</div></div></div>
+      </article>
+      <article class="tst">
+        <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+        <p>"Soy de los que pregunta mil cosas y siempre me respondieron con paciencia por WhatsApp. Un servicio de primera, de verdad."</p>
+        <div class="who"><span class="av">L</span><div><div class="nm">Luis F.</div><div class="lo">Maracay, Venezuela</div></div></div>
+      </article>
+      <article class="tst">
+        <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+        <p>"Le mando cosas a mi mamá cada mes desde que los descubrí. Nunca una sorpresa con el precio, nunca un retraso."</p>
+        <div class="who"><span class="av">D</span><div><div class="nm">Daniela R.</div><div class="lo">Envía desde Doral, EE.UU</div></div></div>
       </article>
     </div>
   </div>
@@ -701,7 +677,6 @@ section{position:relative}
 <section class="sec s-dark skin" id="preguntas">
   <div class="wrap">
     <div class="sec-head center rv">
-      <span class="kicker">Preguntas frecuentes</span>
       <h2>Lo que todos preguntan <span class="em">antes de enviar.</span></h2>
     </div>
     <div class="faq">
@@ -737,12 +712,20 @@ section{position:relative}
 <section class="final skin">
   <div class="wrap">
     <div class="rv">
-      <span class="kicker">Empieza hoy</span>
-      <h2 style="margin-top:1.1rem">Tu familia te está esperando. <span class="em">Empieza por un mensaje.</span></h2>
+      <h2>Tu familia te está esperando. <span class="em">Empieza por un mensaje.</span></h2>
       <p class="lead">Escríbele a tu pana en Mia Compra y cotiza tu envío en 2 minutos. Sin compromiso y sin letra pequeña.</p>
-      <a class="btn btn-y btn-beam btn-lg" data-wa data-msg="Hola Mia Compra, quiero cotizar mi envío de Estados Unidos a Venezuela.">Cotiza por WhatsApp
-        <span class="arw"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </a>
+      <div class="final-cta">
+        <span class="shimmer-btn-wrapper">
+          <span class="glow-bg"></span>
+          <a class="ds-btn-beam" data-wa data-msg="Hola Mia Compra, quiero cotizar mi envío de Estados Unidos a Venezuela.">
+            <span class="ds-btn-beam-bg"></span>
+            <span class="ds-btn-beam-inner">
+              <span class="ds-btn-beam-shimmer"></span>
+              <span class="beam-label">Cotiza por WhatsApp <span class="arw"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+            </span>
+          </a>
+        </span>
+      </div>
     </div>
     <div class="final-contact rv" data-d="1">
       <div class="fc">
@@ -878,39 +861,28 @@ document.querySelectorAll('.faq-item').forEach(item=>{
   });
 });
 
-/* Hero box mouse parallax */
-(function(){
-  if(reduce)return;
-  const hero=document.querySelector('.hero'), box=document.querySelector('.hero-box');
-  if(!hero||!box)return;
-  let raf=null,mx=0,my=0;
-  hero.addEventListener('mousemove',e=>{const r=hero.getBoundingClientRect();mx=(e.clientX-r.left)/r.width-.5;my=(e.clientY-r.top)/r.height-.5;if(!raf)raf=requestAnimationFrame(apply);});
-  hero.addEventListener('mouseleave',()=>{mx=my=0;if(!raf)raf=requestAnimationFrame(apply);});
-  function apply(){box.style.transform=`translate3d(${mx*16}px,${my*16}px,0)`;raf=null;}
-})();
-
 /* Magnetic buttons */
 (function(){
   if(reduce)return;
-  document.querySelectorAll('.btn-beam,.btn-glass').forEach(btn=>{
-    btn.addEventListener('mousemove',e=>{const r=btn.getBoundingClientRect();const x=(e.clientX-r.left-r.width/2)/r.width;const y=(e.clientY-r.top-r.height/2)/r.height;btn.style.transform=`translate(${x*10}px,${y*10}px)`;});
+  document.querySelectorAll('.shimmer-btn-wrapper,.btn-glass').forEach(btn=>{
+    btn.addEventListener('mousemove',e=>{const r=btn.getBoundingClientRect();const x=(e.clientX-r.left-r.width/2)/r.width;const y=(e.clientY-r.top-r.height/2)/r.height;btn.style.transform=`translate(${x*9}px,${y*9}px)`;});
     btn.addEventListener('mouseleave',()=>btn.style.transform='');
   });
 })();
 
-/* Marquee duplicate for seamless loop */
+/* Marquees: duplicate tracks for seamless loop */
 (function(){
-  const t=document.getElementById('marqTrack');
-  if(t) t.innerHTML+=t.innerHTML;
+  ['marqTrack','tstTrack'].forEach(id=>{const t=document.getElementById(id);if(t)t.innerHTML+=t.innerHTML;});
 })();
 
-/* Parallax bg: set image + iOS fallback (bg-attachment:fixed bugs on iOS) */
+/* Parallax bg + iOS fallback (bg-attachment:fixed bugs on iOS) */
 (function(){
   const bg=document.getElementById('paraBg');
-  if(!bg)return;
-  bg.style.backgroundImage="url('assets/para-familia.jpg')";
+  if(bg) bg.style.backgroundImage="url('assets/para-familia.jpg')";
   const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  if(isIOS){ bg.style.backgroundAttachment='scroll'; }
+  if(isIOS){
+    document.querySelectorAll('.para-bg,.hero-bg-img').forEach(el=>el.style.backgroundAttachment='scroll');
+  }
 })();
 </script>
 </body>

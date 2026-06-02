@@ -45,16 +45,15 @@ O repositório já está no GitHub. No painel da Vercel:
 index.html              página inteira (HTML + CSS + JS)
 assets/
   logo-yellow.png       logo oficial Mia Compra (versão amarela)
-  box-hero.jpg          caixa Miami→Caracas (hero)
+  hero-abuela.jpg       avó recebendo a caixa com a logo Mia (hero full-bleed, 1920x1080)
   box-products.jpg      caixa aberta com produtos (seção "qué enviar")
-  abuela.jpg            retrato editorial (seção confianza)
   para-familia.jpg      família recebendo a caixa (seção parallax)
 ```
 
 ## Créditos de assets
 
 - Logo: identidade oficial Mia Compra.
-- `box-hero`, `box-products`, `abuela`, `para-familia`: imagens geradas por IA (Nano Banana Pro), gradeadas no navy da marca para a página.
+- `hero-abuela`, `box-products`, `para-familia`: imagens geradas por IA (Nano Banana Pro), gradeadas no navy da marca. O `hero-abuela` usa a logo oficial como referência, renderizada no rótulo da caixa.
 
 ## Seções
 
