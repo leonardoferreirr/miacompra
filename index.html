@@ -235,6 +235,15 @@ section{position:relative}
 .enviar-photo{border-radius:30px;overflow:hidden;box-shadow:0 50px 90px -40px rgba(4,18,61,.55);position:relative}
 .enviar-photo img{width:100%;display:block}
 .enviar-tag{position:absolute;left:22px;bottom:22px;background:rgba(255,248,231,.92);backdrop-filter:blur(8px);padding:.7rem 1.05rem;border-radius:13px;font-weight:500;font-size:.82rem;color:var(--blue);box-shadow:0 12px 30px -14px rgba(4,18,61,.4)}
+/* chips: duas linhas em carrossel infinito (direções opostas) */
+.chip-marq{margin-top:3.4rem;display:flex;flex-direction:column;gap:1rem;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.chip-row{display:flex;gap:.8rem;width:max-content;will-change:transform;padding:.25rem 0}
+.chip-row.a{animation:chipL 42s linear infinite}
+.chip-row.b{animation:chipR 50s linear infinite}
+.chip-marq:hover .chip-row{animation-play-state:paused}
+.chip-row .chip{flex-shrink:0}
+@keyframes chipL{from{transform:translateX(0)}to{transform:translateX(calc(-50% - .4rem))}}
+@keyframes chipR{from{transform:translateX(calc(-50% - .4rem))}to{transform:translateX(0)}}
 
 /* ============ PARALLAX EMOTIONAL ============ */
 .para{position:relative;color:#fff;overflow:hidden;background-color:var(--deep-2)}
@@ -338,7 +347,17 @@ section{position:relative}
   .hero-copy{max-width:none}
   .hero h1{margin-bottom:1.3rem}
   .hero .lead{margin-bottom:0}
-  .cmp,.footer-grid{grid-template-columns:1fr}
+  /* wedge: sticky-stack (um card sobe sobre o outro) */
+  .cmp{display:block}
+  .cmp-card{position:sticky;margin-bottom:1.1rem}
+  .cmp-old{top:84px;background:#0b1f4d}
+  .cmp-new{top:106px;background:linear-gradient(165deg,rgba(253,198,11,.16),rgba(255,107,71,.05)),#0c2150}
+  /* footer: Mia Compra ao lado de Servicios */
+  .footer-grid{grid-template-columns:1fr 1fr;grid-template-areas:"brand brand" "serv mia" "cont cont";gap:2.2rem 1.4rem}
+  .footer-grid > :nth-child(1){grid-area:brand}
+  .footer-grid > :nth-child(2){grid-area:serv}
+  .footer-grid > :nth-child(3){grid-area:mia}
+  .footer-grid > :nth-child(4){grid-area:cont}
   /* servicios: sticky-stack (um sobe em cima do outro) */
   .svc-grid{display:block;padding-bottom:1rem}
   .svc{position:sticky;margin-bottom:1.1rem;background:#0b1f4d}
@@ -590,22 +609,31 @@ section{position:relative}
   <div class="wrap enviar-grid">
     <div class="rv">
       <h2 style="margin-bottom:1.2rem">Desde los remedios de tu mamá hasta <span class="em">los zapatos que te encargaron.</span></h2>
-      <p class="lead">Si cabe en una caja y lo necesita tu gente, nosotros lo llevamos. Esto es lo que más viaja con nosotros:</p>
-      <div class="chips">
-        <span class="chip"><span class="d"></span>Medicinas y fórmula infantil</span>
-        <span class="chip"><span class="d"></span>Electrónicos y celulares</span>
-        <span class="chip"><span class="d"></span>Ropa y calzado</span>
-        <span class="chip"><span class="d"></span>Cosméticos y perfumes</span>
-        <span class="chip"><span class="d"></span>Repuestos y herramientas</span>
-        <span class="chip"><span class="d"></span>Regalos y sorpresas</span>
-      </div>
+      <p class="lead">Si cabe en una caja y lo necesita tu gente, nosotros lo llevamos. Esto es lo que más viaja con nosotros.</p>
       <p class="note">Hay cosas que no se pueden enviar, como líquidos inflamables, armas y similares. Cuéntanos qué tienes y te decimos al instante si tu envío aplica.</p>
     </div>
     <div class="enviar-media rv" data-d="1">
       <div class="enviar-photo">
         <img src="assets/box-products.jpg" alt="Caja Mia Compra con productos para enviar a Venezuela">
-        <span class="enviar-tag">Una sola caja, todo lo que tu gente necesita</span>
       </div>
+    </div>
+  </div>
+  <div class="chip-marq rv">
+    <div class="chip-row a" id="chipA">
+      <span class="chip"><span class="d"></span>Medicinas y fórmula infantil</span>
+      <span class="chip"><span class="d"></span>Electrónicos y celulares</span>
+      <span class="chip"><span class="d"></span>Ropa y calzado</span>
+      <span class="chip"><span class="d"></span>Cosméticos y perfumes</span>
+      <span class="chip"><span class="d"></span>Repuestos y herramientas</span>
+      <span class="chip"><span class="d"></span>Regalos y sorpresas</span>
+    </div>
+    <div class="chip-row b" id="chipB">
+      <span class="chip"><span class="d"></span>Perfumes y maquillaje</span>
+      <span class="chip"><span class="d"></span>Repuestos y herramientas</span>
+      <span class="chip"><span class="d"></span>Regalos y sorpresas</span>
+      <span class="chip"><span class="d"></span>Vitaminas y suplementos</span>
+      <span class="chip"><span class="d"></span>Laptops y tablets</span>
+      <span class="chip"><span class="d"></span>Juguetes para los niños</span>
     </div>
   </div>
 </section>
@@ -707,45 +735,6 @@ section{position:relative}
       <div class="faq-item rv">
         <div class="faq-q">¿Qué puedo enviar? <span class="ind">+</span></div>
         <div class="faq-a"><div class="faq-a-in">Casi todo lo que cabe en una caja: medicinas, fórmula, electrónicos, ropa, cosméticos, repuestos y regalos. Algunas cosas no se pueden enviar, como líquidos inflamables o armas. Escríbenos y te decimos al instante si tu envío aplica.</div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ CTA FINAL ============ -->
-<section class="final skin">
-  <div class="wrap">
-    <div class="rv">
-      <h2>Tu familia te está esperando. <span class="em">Empieza por un mensaje.</span></h2>
-      <p class="lead">Escríbele a tu pana en Mia Compra y cotiza tu envío en 2 minutos. Sin compromiso y sin letra pequeña.</p>
-      <div class="final-cta">
-        <span class="shimmer-btn-wrapper">
-          <span class="glow-bg"></span>
-          <a class="ds-btn-beam" data-wa data-msg="Hola Mia Compra, quiero cotizar mi envío de Estados Unidos a Venezuela.">
-            <span class="ds-btn-beam-bg"></span>
-            <span class="ds-btn-beam-inner">
-              <span class="ds-btn-beam-shimmer"></span>
-              <span class="beam-label">Cotiza por WhatsApp <span class="arw"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
-            </span>
-          </a>
-        </span>
-      </div>
-    </div>
-    <div class="final-contact rv" data-d="1">
-      <div class="fc">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-        <h4>Almacén</h4>
-        <p>Doral, Florida · Estados Unidos<br><span style="color:var(--on-dark-faint)">[Dirección completa: a completar]</span></p>
-      </div>
-      <div class="fc">
-        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-        <h4>Atención</h4>
-        <p>Lunes a sábado<br><span style="color:var(--on-dark-faint)">[Horario: a completar]</span></p>
-      </div>
-      <div class="fc">
-        <div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg></div>
-        <h4>Redes</h4>
-        <p><a href="https://instagram.com/miacompra" target="_blank" rel="noopener">@miacompra</a><br><a data-wa data-msg="Hola Mia Compra, quiero más información.">WhatsApp directo</a></p>
       </div>
     </div>
   </div>
@@ -876,7 +865,7 @@ document.querySelectorAll('.faq-item').forEach(item=>{
 
 /* Marquees: duplicate tracks for seamless loop */
 (function(){
-  ['marqTrack','tstTrack'].forEach(id=>{const t=document.getElementById(id);if(t)t.innerHTML+=t.innerHTML;});
+  ['marqTrack','tstTrack','chipA','chipB'].forEach(id=>{const t=document.getElementById(id);if(t)t.innerHTML+=t.innerHTML;});
 })();
 
 /* Parallax bg + iOS fallback (bg-attachment:fixed bugs on iOS) */

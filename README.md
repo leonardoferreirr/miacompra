@@ -26,10 +26,8 @@ Ou só abrir o `index.html` no navegador.
    const WA_NUMBER = "1XXXXXXXXXX"; // formato internacional sem sinais: 1 + número (EE.UU)
    ```
    Todos os botões e o float do WhatsApp puxam desse número automaticamente.
-2. **Endereço do almacén** (Doral, FL): bloco "Almacén" no CTA final, hoje marcado `[Dirección completa: a completar]`.
-3. **Horário de atención**: bloco "Atención", hoje `[Horario: a completar]`.
-4. **Instagram**: confirmar o handle `@miacompra` (links em `instagram.com/miacompra`).
-5. **Depoimentos**: os 3 testimonios são **exemplos realistas**, não reais. Trocar por depoimentos verdadeiros (ou remover a seção) antes de publicar, por questão de ética e política do Meta Ads.
+2. **Instagram**: confirmar o handle `@miacompra` (links em `instagram.com/miacompra`).
+3. **Depoimentos**: os 8 testimonios são **exemplos realistas**, não reais. Trocar por depoimentos verdadeiros (ou remover a seção) antes de publicar, por questão de ética e política do Meta Ads.
 
 ## Deploy (Vercel, 1 clique)
 
@@ -57,7 +55,7 @@ assets/
 
 ## Seções
 
-Nav glass · Hero · Faixa de selos · A diferença (preço cerrado vs concorrente) · Precio cerrado (recibo) · Servicios · Cómo funciona (4 pasos) · Qué puedes enviar · Parallax emocional · Por qué confiar (Latinship) · Testimonios · Preguntas · CTA final · Footer · WhatsApp flutuante.
+Nav glass · Hero (foto full-bleed) · Faixa de selos · A diferença (preço cerrado vs concorrente, sticky-stack no mobile) · Precio cerrado (recibo) · Servicios (sticky-stack no mobile) · Cómo funciona (4 pasos) · Qué puedes enviar (chips em carrossel infinito) · Parallax emocional · Testimonios (carrossel infinito) · Preguntas · Footer · WhatsApp flutuante.
 
 ---
 © 2026 Mia Compra · Tu felicidad, nuestro compromiso
