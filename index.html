@@ -46,7 +46,7 @@ a{color:inherit;text-decoration:none}
 
 /* ============ TYPE ============ */
 h1,h2,h3,h4{font-weight:300;line-height:1.04;letter-spacing:-.025em;color:var(--white)}
-h1{font-size:clamp(2.5rem,6.2vw,4.7rem)}
+h1{font-size:clamp(2rem,4.6vw,4rem);line-height:1.14;letter-spacing:-.02em}
 h2{font-size:clamp(2rem,4.6vw,3.4rem)}
 h3{font-size:1.2rem;letter-spacing:-.01em;line-height:1.3}
 .em{font-weight:400;color:var(--yellow)}
@@ -119,7 +119,7 @@ h3{font-size:1.2rem;letter-spacing:-.01em;line-height:1.3}
 .hero{position:relative;overflow:hidden;min-height:94vh;display:flex;align-items:center;background-color:var(--deep-2)}
 .hero-bg-img{position:absolute;inset:0;background-image:url('assets/hero-abuela.jpg');background-size:cover;background-position:72% center;background-attachment:fixed;z-index:0}
 .hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(98deg,rgba(4,18,61,.96) 0%,rgba(4,18,61,.86) 28%,rgba(6,26,80,.5) 60%,rgba(6,26,80,.18) 100%)}
-.hero-in{position:relative;z-index:2;width:100%;padding:9rem 0 5rem}
+.hero-in{position:relative;z-index:2;padding:9rem 0 5rem}
 .hero-copy{max-width:38rem}
 .hero h1{margin:0 0 1.6rem}
 .hero .lead{max-width:33rem}
@@ -331,9 +331,13 @@ section{position:relative}
   .burger{display:flex}
   .nav-cta{display:none}
   .hero{min-height:auto}
-  .hero-bg-img{background-position:26% center;background-attachment:scroll}
-  .hero::after{background:linear-gradient(180deg,rgba(4,18,61,.66) 0%,rgba(4,18,61,.8) 52%,rgba(4,18,61,.95) 100%)}
-  .hero-in{padding:7.5rem 0 3.5rem}
+  .hero{min-height:auto}
+  .hero-bg-img{background-position:74% 30%;background-attachment:scroll}
+  .hero::after{background:linear-gradient(179deg,rgba(4,18,61,.95) 0%,rgba(4,18,61,.82) 26%,rgba(4,18,61,.5) 52%,rgba(4,18,61,.46) 72%,rgba(4,18,61,.66) 100%)}
+  .hero-in{padding:7.5rem 0 3rem}
+  .hero-copy{max-width:none}
+  .hero h1{margin-bottom:1.3rem}
+  .hero .lead{margin-bottom:0}
   .cmp,.footer-grid{grid-template-columns:1fr}
   /* servicios: sticky-stack (um sobe em cima do outro) */
   .svc-grid{display:block;padding-bottom:1rem}
