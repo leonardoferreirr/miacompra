@@ -79,6 +79,10 @@ export const ESTADOS_USA: Record<string, EstadoRate> = {
   WEST_VIRGINIA:  { nombre: "West Virginia",  ft3: 49,  lb: 6.5,  clasif: "Baja",  ciudades: ["Charleston", "Huntington", "Morgantown", "Parkersburg", "Wheeling"] },
   WISCONSIN:      { nombre: "Wisconsin",      ft3: 51,  lb: 6.75, clasif: "Media", ciudades: ["Green Bay", "Kenosha", "Madison", "Milwaukee", "Racine"] },
   WYOMING:        { nombre: "Wyoming",        ft3: 54,  lb: 7,    clasif: "Alta",  ciudades: ["Casper", "Cheyenne", "Laramie", "Sheridan"] },
+
+  // ⚠️ Estado de TESTE — usado apenas para validar o fluxo de pagamento Stripe.
+  // Quando selecionado, força total = $0.50 (mínimo do Stripe).
+  TEST:           { nombre: "🧪 Teste (Stripe)", ft3: 0.01, lb: 0.01, clasif: "Baja", ciudades: ["Cidade Teste"] },
 };
 
 // Cálculo do preço — fonte única de verdade
@@ -91,6 +95,11 @@ export function cotizar(opts: {
   const e = ESTADOS_USA[opts.estadoKey];
   const c = CAJAS[opts.caja];
   if (!e || !c) return { total: 0, detalle: "Datos incompletos" };
+
+  // ⚠️ Override de teste: estado TEST força mínimo do Stripe ($0.50)
+  if (opts.estadoKey === "TEST") {
+    return { total: 0.5, detalle: "MODO TESTE · Stripe mínimo $0.50 USD" };
+  }
 
   if (opts.modo === "maritimo") {
     const total = e.ft3 * c.ft3;
