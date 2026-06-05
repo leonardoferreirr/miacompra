@@ -169,28 +169,28 @@ export default function CotizadorPage() {
             <h2>¿Cómo es tu paquete?</h2>
             <p className="sub">Elige el tipo de envío y el tamaño de la caja.</p>
 
-            <label style={{ fontSize: ".78rem", fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--on-dark-soft)" }}>Tipo de envío</label>
-            <div className="radio-grid" style={{ marginTop: ".5rem" }}>
+            <span className="field-label-top">Tipo de envío</span>
+            <div className="radio-grid">
               <ModoCard
                 value="maritimo"
                 selected={s.modo === "maritimo"}
                 onClick={() => update("modo", "maritimo")}
-                icon="🚢"
+                icon={<IconShip />}
                 title="Marítimo"
-                desc="Más económico · llegada en 25–35 días"
+                desc="Más económico · llegada en 3 a 5 semanas"
               />
               <ModoCard
                 value="aereo"
                 selected={s.modo === "aereo"}
                 onClick={() => update("modo", "aereo")}
-                icon="✈️"
+                icon={<IconPlane />}
                 title="Aéreo"
-                desc="Más rápido · llegada en 7–12 días"
+                desc="Más rápido · llegada en 5 a 7 días hábiles"
               />
             </div>
 
-            <label style={{ fontSize: ".78rem", fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--on-dark-soft)" }}>Tamaño de la caja</label>
-            <div className="radio-grid caja-grid" style={{ marginTop: ".5rem" }}>
+            <span className="field-label-top">Tamaño de la caja</span>
+            <div className="radio-grid caja-grid">
               {(Object.entries(CAJAS) as [Caja, typeof CAJAS["Small"]][]).map(([key, c]) => (
                 <CajaCard
                   key={key}
@@ -231,9 +231,9 @@ export default function CotizadorPage() {
             {cotizacion && step2Ok && (
               <div className="resumen">
                 <div className="label">Precio cerrado del envío</div>
-                <div className="total">${cotizacion.total.toFixed(2)} <span style={{ fontSize: "1rem", color: "var(--on-dark-soft)" }}>USD</span></div>
+                <div className="total">${cotizacion.total.toFixed(2)} <small>USD</small></div>
                 <div className="detalle">{cotizacion.detalle}</div>
-                <span className="badge">✓ Seguro de $500 incluido · sin sorpresas en la aduana</span>
+                <span className="badge"><IconCheck /> Seguro de $500 incluido · sin sorpresas en la aduana</span>
               </div>
             )}
 
@@ -322,16 +322,16 @@ export default function CotizadorPage() {
               <h3>Tu pedido</h3>
               <div className="row"><span className="k">Origen</span><span className="v">{s.ciudadUsa}, {estadoUsa?.nombre}</span></div>
               <div className="row"><span className="k">Destino</span><span className="v">{s.ciudadVe}, {s.estadoVeKey}</span></div>
-              <div className="row"><span className="k">Tipo de envío</span><span className="v">{s.modo === "maritimo" ? "🚢 Marítimo" : "✈️ Aéreo"}</span></div>
-              <div className="row"><span className="k">Tamaño de la caja</span><span className="v">📦 {s.caja}</span></div>
+              <div className="row"><span className="k">Tipo de envío</span><span className="v">{s.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}</span></div>
+              <div className="row"><span className="k">Tamaño de la caja</span><span className="v"><IconBox /> {s.caja}</span></div>
               {s.modo === "aereo" && (
                 <div className="row"><span className="k">Peso</span><span className="v">{s.pesoLb} lb</span></div>
               )}
               <div className="row total-row"><span className="k">Total</span><span className="v">${cotizacion.total.toFixed(2)}</span></div>
               <div className="badges">
-                <span className="b">✓ Seguro de $500 incluido</span>
-                <span className="b">✓ Impuestos de aduana incluidos</span>
-                <span className="b">✓ Entrega puerta a puerta</span>
+                <span className="b"><IconCheck /> Seguro de $500 incluido</span>
+                <span className="b"><IconCheck /> Impuestos de aduana incluidos</span>
+                <span className="b"><IconCheck /> Entrega puerta a puerta</span>
               </div>
             </aside>
           </div>
@@ -378,7 +378,7 @@ function Stepper({ step }: { step: number }) {
   );
 }
 
-function ModoCard({ value, selected, onClick, icon, title, desc }: { value: string; selected: boolean; onClick: () => void; icon: string; title: string; desc: string }) {
+function ModoCard({ value, selected, onClick, icon, title, desc }: { value: string; selected: boolean; onClick: () => void; icon: React.ReactNode; title: string; desc: string }) {
   return (
     <label className={`radio-card ${selected ? "selected" : ""}`}>
       <input type="radio" name="modo" value={value} checked={selected} onChange={onClick} />
@@ -393,10 +393,50 @@ function CajaCard({ value, selected, onClick, title, desc }: { value: string; se
   return (
     <label className={`radio-card ${selected ? "selected" : ""}`}>
       <input type="radio" name="caja" value={value} checked={selected} onChange={onClick} />
-      <span className="ic">📦</span>
+      <span className="ic"><IconBox /></span>
       <div className="ttl">{title}</div>
       <div className="desc">{desc}</div>
     </label>
+  );
+}
+
+// Flat icons (stroke 1.5, linecap round). Cor herda do .ic via currentColor.
+function IconShip() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 21l1.6 5a2 2 0 0 0 1.9 1.4h17a2 2 0 0 0 1.9-1.4L28 21" />
+      <path d="M6 21V13a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8" />
+      <path d="M11 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4" />
+      <path d="M16 5V2" />
+      <path d="M16 11v10" />
+    </svg>
+  );
+}
+
+function IconPlane() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M28 17.5L18.5 16l-3 9.5-2.5-1L13 18 5.5 16 4 14l24-7-2 7 1.5 2L28 17.5z" />
+    </svg>
+  );
+}
+
+function IconBox() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M27 10L16 5 5 10v12l11 5 11-5z" />
+      <path d="M5 10l11 5 11-5" />
+      <path d="M16 15v12" />
+      <path d="M10.5 7.5l11 5" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
   );
 }
 
