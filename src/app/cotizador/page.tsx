@@ -97,7 +97,7 @@ export default function CotizadorPage() {
       <div className="cot-wrap">
         <header className="cot-header">
           <Link href="/" className="brand">
-            <img src="/assets/logo-yellow.png" alt="Mia Compra" />
+            <img src="/assets/logo-full.png" alt="Mia Compra · Tu felicidad, nuestro compromiso" />
           </Link>
           <Link href="/" className="back-link">← Volver al inicio</Link>
         </header>
@@ -383,8 +383,10 @@ function ModoCard({ value, selected, onClick, icon, title, desc }: { value: stri
     <label className={`radio-card ${selected ? "selected" : ""}`}>
       <input type="radio" name="modo" value={value} checked={selected} onChange={onClick} />
       <span className="ic">{icon}</span>
-      <div className="ttl">{title}</div>
-      <div className="desc">{desc}</div>
+      <div className="body">
+        <div className="ttl">{title}</div>
+        <div className="desc">{desc}</div>
+      </div>
     </label>
   );
 }
@@ -394,8 +396,10 @@ function CajaCard({ value, selected, onClick, title, desc }: { value: string; se
     <label className={`radio-card ${selected ? "selected" : ""}`}>
       <input type="radio" name="caja" value={value} checked={selected} onChange={onClick} />
       <span className="ic"><IconBox /></span>
-      <div className="ttl">{title}</div>
-      <div className="desc">{desc}</div>
+      <div className="body">
+        <div className="ttl">{title}</div>
+        <div className="desc">{desc}</div>
+      </div>
     </label>
   );
 }
