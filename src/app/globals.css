@@ -361,3 +361,30 @@ section{position:relative}
   .wfloat .lb{display:none}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+/* ============ FAMILIAS — carrossel infinito de fotos ============ */
+.fam-marq {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+.fam-track {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  will-change: transform;
+}
+.fam-track img {
+  width: clamp(180px, 22vw, 260px);
+  height: clamp(240px, 28vw, 340px);
+  object-fit: cover;
+  border-radius: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 18px 40px -16px rgba(0,0,0,.55);
+  background: rgba(255,255,255,.05);
+}
+@media (max-width: 760px) {
+  .fam-track img { width: 200px; height: 260px; border-radius: 14px; }
+  .fam-track { gap: .7rem; }
+}
