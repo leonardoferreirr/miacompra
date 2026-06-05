@@ -51,9 +51,9 @@ export async function POST(req: Request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      // Liberar todos os métodos habilitados na conta Stripe (Apple Pay,
-      // Google Pay, Amazon Pay, Link, Klarna, Cash App, cartão, etc.)
-      automatic_payment_methods: { enabled: true },
+      // Sem `payment_method_types` → Stripe libera automaticamente todos os
+      // métodos habilitados na conta (cartão, Apple Pay, Google Pay, Amazon
+      // Pay, Link, Klarna, Cash App, etc.) conforme o navegador suportar.
       customer_email: body.cliente.email,
       line_items: [
         {
