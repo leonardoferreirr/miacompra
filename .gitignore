@@ -1,8 +1,7 @@
-# OS
 .DS_Store
-._*
-# editor / preview
-.claude/
+node_modules
+.next
+.env*.local
+.vercel
+next-env.d.ts
 *.log
-# QA artifacts
-render-*.png

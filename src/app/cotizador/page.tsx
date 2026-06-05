@@ -1,0 +1,422 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import "./cotizador.css";
+import { CAJAS, cotizar, ESTADOS_LIST, ESTADOS_USA, type Caja, type Modo } from "@/lib/rates";
+import { ESTADOS_VE_LIST } from "@/lib/venezuela";
+import { INITIAL_STATE, type CotizacionState } from "@/lib/types";
+
+const WA_NUMBER = "17865502727"; // +1 786 550-2727 — Mia Compra suporte
+const WA_MSG = "Hola Mia Compra, tengo una duda sobre mi cotización.";
+
+export default function CotizadorPage() {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [s, setS] = useState<CotizacionState>(INITIAL_STATE);
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  function update<K extends keyof CotizacionState>(k: K, v: CotizacionState[K]) {
+    setS((prev) => ({ ...prev, [k]: v }));
+  }
+
+  const estadoUsa = s.estadoUsaKey ? ESTADOS_USA[s.estadoUsaKey] : null;
+  const ciudadesUsa = estadoUsa?.ciudades ?? [];
+  const ciudadesVe = useMemo(() => {
+    const e = ESTADOS_VE_LIST.find((x) => x.key === s.estadoVeKey);
+    return e?.ciudades ?? [];
+  }, [s.estadoVeKey]);
+
+  const cotizacion = useMemo(() => {
+    if (!s.estadoUsaKey || !s.caja || !s.modo) return null;
+    return cotizar({
+      estadoKey: s.estadoUsaKey,
+      caja: s.caja as Caja,
+      modo: s.modo as Modo,
+      pesoLb: typeof s.pesoLb === "number" ? s.pesoLb : 0,
+    });
+  }, [s.estadoUsaKey, s.caja, s.modo, s.pesoLb]);
+
+  const step1Ok = !!(s.estadoUsaKey && s.ciudadUsa && s.estadoVeKey && s.ciudadVe);
+  const step2Ok = useMemo(() => {
+    if (!s.modo || !s.caja) return false;
+    if (s.modo === "aereo") {
+      const peso = typeof s.pesoLb === "number" ? s.pesoLb : 0;
+      const max = CAJAS[s.caja as Caja].maxPesoAereoLb;
+      return peso > 0 && peso <= max;
+    }
+    return true;
+  }, [s.modo, s.caja, s.pesoLb]);
+  const step3Ok = !!(s.email && s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
+
+  async function handleCheckout() {
+    if (!cotizacion) return;
+    setSubmitting(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          total: cotizacion.total,
+          detalle: cotizacion.detalle,
+          envio: {
+            origen: `${s.ciudadUsa}, ${estadoUsa?.nombre}`,
+            destino: `${s.ciudadVe}, ${s.estadoVeKey}`,
+            modo: s.modo,
+            caja: s.caja,
+            pesoLb: s.pesoLb,
+          },
+          cliente: {
+            email: s.email,
+            nombre: `${s.nombre} ${s.apellidos}`,
+            direccion: `${s.direccion} ${s.apartamento}`.trim(),
+            poblacion: s.poblacion,
+            provincia: s.provincia,
+            cp: s.cp,
+            whatsapp: s.whatsapp,
+            notas: s.notas,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setErr(data.error || "No fue posible iniciar el pago.");
+      }
+    } catch (e: any) {
+      setErr(e?.message || "Error de red.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="cot-page">
+      <div className="cot-wrap">
+        <header className="cot-header">
+          <Link href="/" className="brand">
+            <img src="/assets/logo-yellow.png" alt="Mia Compra" />
+          </Link>
+          <Link href="/" className="back-link">← Volver al inicio</Link>
+        </header>
+
+        <Stepper step={step} />
+
+        {step === 1 && (
+          <div className="cot-card">
+            <h2>¿De dónde sale y a dónde llega?</h2>
+            <p className="sub">El precio depende del estado de origen en Estados Unidos.</p>
+
+            <div className="row-2">
+              <div className="field">
+                <label>Estado de origen (EE.UU.)</label>
+                <select value={s.estadoUsaKey} onChange={(e) => { update("estadoUsaKey", e.target.value); update("ciudadUsa", ""); }}>
+                  <option value="">Selecciona el estado…</option>
+                  {ESTADOS_LIST.map((e) => (
+                    <option key={e.key} value={e.key}>{e.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label>Ciudad de origen</label>
+                <select value={s.ciudadUsa} onChange={(e) => update("ciudadUsa", e.target.value)} disabled={!s.estadoUsaKey}>
+                  <option value="">{s.estadoUsaKey ? "Selecciona la ciudad…" : "Elige primero el estado"}</option>
+                  {ciudadesUsa.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                {s.estadoUsaKey && (
+                  <div className="hint">¿Tu ciudad no aparece? Elige la más cercana — atendemos toda el área metropolitana.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="row-2" style={{ marginTop: "1.5rem" }}>
+              <div className="field">
+                <label>Estado de destino (Venezuela)</label>
+                <select value={s.estadoVeKey} onChange={(e) => { update("estadoVeKey", e.target.value); update("ciudadVe", ""); }}>
+                  <option value="">Selecciona el estado…</option>
+                  {ESTADOS_VE_LIST.map((e) => (
+                    <option key={e.key} value={e.key}>{e.key}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label>Ciudad de destino</label>
+                <select value={s.ciudadVe} onChange={(e) => update("ciudadVe", e.target.value)} disabled={!s.estadoVeKey}>
+                  <option value="">{s.estadoVeKey ? "Selecciona la ciudad…" : "Elige primero el estado"}</option>
+                  {ciudadesVe.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="cot-actions">
+              <span />
+              <button className="btn-next" disabled={!step1Ok} onClick={() => setStep(2)}>
+                Siguiente
+                <Arrow />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="cot-card">
+            <h2>¿Cómo es tu paquete?</h2>
+            <p className="sub">Elige el tipo de envío y el tamaño de la caja.</p>
+
+            <label style={{ fontSize: ".78rem", fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--on-dark-soft)" }}>Tipo de envío</label>
+            <div className="radio-grid" style={{ marginTop: ".5rem" }}>
+              <ModoCard
+                value="maritimo"
+                selected={s.modo === "maritimo"}
+                onClick={() => update("modo", "maritimo")}
+                icon="🚢"
+                title="Marítimo"
+                desc="Más económico · llegada en 25–35 días"
+              />
+              <ModoCard
+                value="aereo"
+                selected={s.modo === "aereo"}
+                onClick={() => update("modo", "aereo")}
+                icon="✈️"
+                title="Aéreo"
+                desc="Más rápido · llegada en 7–12 días"
+              />
+            </div>
+
+            <label style={{ fontSize: ".78rem", fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--on-dark-soft)" }}>Tamaño de la caja</label>
+            <div className="radio-grid caja-grid" style={{ marginTop: ".5rem" }}>
+              {(Object.entries(CAJAS) as [Caja, typeof CAJAS["Small"]][]).map(([key, c]) => (
+                <CajaCard
+                  key={key}
+                  value={key}
+                  selected={s.caja === key}
+                  onClick={() => update("caja", key)}
+                  title={c.label}
+                  desc={
+                    s.modo === "aereo"
+                      ? `Hasta ${c.maxPesoAereoLb} lb · ${c.ft3} ft³`
+                      : `${c.ft3} ft³ · peso volumen ${c.pesoVolumenLb} lb`
+                  }
+                />
+              ))}
+            </div>
+
+            {s.modo === "aereo" && s.caja && (
+              <div className="field" style={{ marginTop: "1rem" }}>
+                <label>Peso del paquete (libras)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={CAJAS[s.caja as Caja].maxPesoAereoLb}
+                  step="0.1"
+                  placeholder={`Máximo ${CAJAS[s.caja as Caja].maxPesoAereoLb} lb`}
+                  value={s.pesoLb === "" ? "" : s.pesoLb}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    update("pesoLb", v === "" ? "" : Number(v));
+                  }}
+                />
+                <div className="hint">
+                  Cobramos el mayor entre peso real y peso volumen ({CAJAS[s.caja as Caja].pesoVolumenLb} lb).
+                </div>
+              </div>
+            )}
+
+            {cotizacion && step2Ok && (
+              <div className="resumen">
+                <div className="label">Precio cerrado del envío</div>
+                <div className="total">${cotizacion.total.toFixed(2)} <span style={{ fontSize: "1rem", color: "var(--on-dark-soft)" }}>USD</span></div>
+                <div className="detalle">{cotizacion.detalle}</div>
+                <span className="badge">✓ Seguro de $500 incluido · sin sorpresas en la aduana</span>
+              </div>
+            )}
+
+            <div className="cot-actions">
+              <button className="btn-prev" onClick={() => setStep(1)}>← Atrás</button>
+              <button className="btn-next" disabled={!step2Ok} onClick={() => setStep(3)}>
+                Continuar al pago
+                <Arrow />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && cotizacion && (
+          <div className="cot-grid-3">
+            <div className="cot-card">
+              <h2>Detalles del envío</h2>
+              <p className="sub">Completa tus datos y los del destinatario. El pago es 100% seguro vía Stripe.</p>
+
+              <SectionTitle>Tus datos</SectionTitle>
+              <div className="field">
+                <label>Correo electrónico</label>
+                <input type="email" value={s.email} onChange={(e) => update("email", e.target.value)} placeholder="tu@correo.com" />
+              </div>
+              <div className="row-2">
+                <div className="field">
+                  <label>Nombre</label>
+                  <input value={s.nombre} onChange={(e) => update("nombre", e.target.value)} placeholder="Tu nombre" />
+                </div>
+                <div className="field">
+                  <label>Apellidos</label>
+                  <input value={s.apellidos} onChange={(e) => update("apellidos", e.target.value)} placeholder="Tus apellidos" />
+                </div>
+              </div>
+
+              <SectionTitle>Dirección del destinatario (Venezuela)</SectionTitle>
+              <div className="field">
+                <label>Dirección de la calle</label>
+                <input value={s.direccion} onChange={(e) => update("direccion", e.target.value)} placeholder="Nombre de la calle y número de la casa" />
+              </div>
+              <div className="field">
+                <label>Apartamento, habitación, etc. (opcional)</label>
+                <input value={s.apartamento} onChange={(e) => update("apartamento", e.target.value)} />
+              </div>
+              <div className="row-2">
+                <div className="field">
+                  <label>Población</label>
+                  <input value={s.poblacion} onChange={(e) => update("poblacion", e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>Provincia</label>
+                  <input value={s.provincia || s.estadoVeKey} onChange={(e) => update("provincia", e.target.value)} />
+                </div>
+              </div>
+              <div className="row-2">
+                <div className="field">
+                  <label>Código postal</label>
+                  <input value={s.cp} onChange={(e) => update("cp", e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>WhatsApp del destinatario</label>
+                  <input value={s.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} placeholder="+58 ..." />
+                </div>
+              </div>
+              <div className="field">
+                <label>Notas del pedido (opcional)</label>
+                <textarea value={s.notas} onChange={(e) => update("notas", e.target.value)} placeholder="Notas para la entrega o el contenido de la caja…" />
+              </div>
+
+              {err && (
+                <div style={{ background: "rgba(255,107,71,.12)", border: "1px solid rgba(255,107,71,.35)", color: "#ffa78e", borderRadius: 10, padding: "0.75rem 1rem", marginTop: "1rem", fontSize: ".88rem" }}>
+                  {err}
+                </div>
+              )}
+
+              <div className="cot-actions">
+                <button className="btn-prev" onClick={() => setStep(2)}>← Atrás</button>
+                <button className="btn-next" disabled={!step3Ok || submitting} onClick={handleCheckout}>
+                  {submitting ? "Procesando…" : `Pagar $${cotizacion.total.toFixed(2)} USD`}
+                  {!submitting && <Arrow />}
+                </button>
+              </div>
+            </div>
+
+            <aside className="tu-pedido">
+              <h3>Tu pedido</h3>
+              <div className="row"><span className="k">Origen</span><span className="v">{s.ciudadUsa}, {estadoUsa?.nombre}</span></div>
+              <div className="row"><span className="k">Destino</span><span className="v">{s.ciudadVe}, {s.estadoVeKey}</span></div>
+              <div className="row"><span className="k">Tipo de envío</span><span className="v">{s.modo === "maritimo" ? "🚢 Marítimo" : "✈️ Aéreo"}</span></div>
+              <div className="row"><span className="k">Tamaño de la caja</span><span className="v">📦 {s.caja}</span></div>
+              {s.modo === "aereo" && (
+                <div className="row"><span className="k">Peso</span><span className="v">{s.pesoLb} lb</span></div>
+              )}
+              <div className="row total-row"><span className="k">Total</span><span className="v">${cotizacion.total.toFixed(2)}</span></div>
+              <div className="badges">
+                <span className="b">✓ Seguro de $500 incluido</span>
+                <span className="b">✓ Impuestos de aduana incluidos</span>
+                <span className="b">✓ Entrega puerta a puerta</span>
+              </div>
+            </aside>
+          </div>
+        )}
+      </div>
+
+      {/* WhatsApp support bubble — só visível nos steps 2 e 3 */}
+      {step >= 2 && (
+        <a
+          className="wa-bubble"
+          href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MSG)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Soporte por WhatsApp"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4a7.95 7.95 0 0 0-6.94 11.92L4 20l4.2-1.1a7.94 7.94 0 0 0 3.85.98h.01a7.94 7.94 0 0 0 5.54-13.56zm-5.55 12.21h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.49.65.66-2.43-.15-.25a6.61 6.61 0 0 1 10.27-8.16 6.55 6.55 0 0 1 1.93 4.66 6.62 6.62 0 0 1-6.61 6.59zm3.62-4.94c-.2-.1-1.18-.58-1.36-.64-.18-.07-.32-.1-.45.1-.13.2-.51.64-.62.77-.12.13-.23.15-.43.05a5.43 5.43 0 0 1-1.6-.99 6 6 0 0 1-1.1-1.38c-.12-.2-.01-.3.09-.4l.3-.36c.1-.12.13-.2.2-.33.06-.13.03-.25-.02-.35l-.61-1.48c-.16-.4-.33-.34-.45-.34l-.39-.01c-.13 0-.35.05-.53.25a2.13 2.13 0 0 0-.67 1.59c0 .94.68 1.84.78 1.98.1.13 1.34 2.04 3.25 2.86.45.2.81.31 1.09.4.46.15.87.13 1.2.08.37-.06 1.13-.46 1.29-.91.16-.45.16-.83.11-.91-.05-.08-.18-.13-.38-.23z" />
+          </svg>
+          <span className="lbl">¿Necesitas ayuda?</span>
+        </a>
+      )}
+    </main>
+  );
+}
+
+function Stepper({ step }: { step: number }) {
+  const items = ["Origen y destino", "Paquete", "Pago"];
+  return (
+    <div className="stepper">
+      {items.map((label, i) => {
+        const num = i + 1;
+        const status = step === num ? "active" : step > num ? "done" : "";
+        return (
+          <div key={i} style={{ display: "contents" }}>
+            <div className={`step-item ${status}`}>
+              <span className={`step-num ${status}`}>{step > num ? "✓" : num}</span>
+              <span className="step-label">{label}</span>
+            </div>
+            {i < items.length - 1 && <span className={`step-bar ${step > num ? "done" : ""}`} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ModoCard({ value, selected, onClick, icon, title, desc }: { value: string; selected: boolean; onClick: () => void; icon: string; title: string; desc: string }) {
+  return (
+    <label className={`radio-card ${selected ? "selected" : ""}`}>
+      <input type="radio" name="modo" value={value} checked={selected} onChange={onClick} />
+      <span className="ic">{icon}</span>
+      <div className="ttl">{title}</div>
+      <div className="desc">{desc}</div>
+    </label>
+  );
+}
+
+function CajaCard({ value, selected, onClick, title, desc }: { value: string; selected: boolean; onClick: () => void; title: string; desc: string }) {
+  return (
+    <label className={`radio-card ${selected ? "selected" : ""}`}>
+      <input type="radio" name="caja" value={value} checked={selected} onChange={onClick} />
+      <span className="ic">📦</span>
+      <div className="ttl">{title}</div>
+      <div className="desc">{desc}</div>
+    </label>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 style={{
+      fontSize: "0.85rem",
+      fontWeight: 500,
+      letterSpacing: ".06em",
+      textTransform: "uppercase",
+      color: "var(--yellow)",
+      margin: "1.8rem 0 0.8rem",
+    }}>{children}</h3>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
