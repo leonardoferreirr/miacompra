@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     icon: [{ url: "/assets/logo-yellow.png", type: "image/png" }],
   },
   openGraph: {
-    title: "Mia Compra · Tu pana para enviar de Estados Unidos a Venezuela",
+    title: "Mia Compra · Tu aliado para enviar de Estados Unidos a Venezuela",
     description: "Precio cerrado, sin sorpresas en la aduana. Puerta a puerta, asegurado, aéreo y marítimo.",
     type: "website",
   },
