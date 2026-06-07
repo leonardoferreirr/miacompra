@@ -271,7 +271,7 @@ export default function CotizadorPage() {
 
             <div className="row-2" style={{ marginTop: "1rem" }}>
               <div className="field">
-                <label>Estado de destino (Venezuela)</label>
+                <label>Estado de destino (Ven)</label>
                 <select value={s.estadoVeKey} onChange={(e) => { update("estadoVeKey", e.target.value); update("ciudadVe", ""); }}>
                   <option value="">Selecciona el estado…</option>
                   {ESTADOS_VE_LIST.map((e) => (
