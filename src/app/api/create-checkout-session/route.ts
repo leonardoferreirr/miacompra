@@ -108,6 +108,10 @@ export async function POST(req: Request) {
         "amazon_pay",
         "klarna",
       ],
+      // Klarna e Amazon Pay são geo-filtrados — Stripe esconde se não
+      // souber o billing country. Coletar billing destrava esses métodos
+      // quando o cliente é dos EUA (público real do Mia Compra).
+      billing_address_collection: "required",
       customer_email: cliente.email,
       line_items: [
         {
