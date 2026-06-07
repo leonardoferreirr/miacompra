@@ -322,7 +322,7 @@ export default function CotizadorPage() {
                 <div className="label">Precio cerrado del envío</div>
                 <div className="total">${cotizacion.total.toFixed(2)} <small>USD</small></div>
                 <div className="detalle">{cotizacion.detalle}</div>
-                <span className="badge"><IconCheck /> Seguro de $500 incluido · sin sorpresas en la aduana</span>
+                <span className="badge"><IconCheck /> Seguro de $500 incluido · impuestos de aduana incluidos</span>
               </div>
             )}
 
