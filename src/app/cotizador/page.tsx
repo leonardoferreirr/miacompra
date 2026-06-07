@@ -322,12 +322,9 @@ export default function CotizadorPage() {
                   value={key}
                   selected={s.caja === key}
                   onClick={() => update("caja", key)}
-                  title={c.label}
-                  desc={
-                    s.modo === "aereo"
-                      ? `Hasta ${c.maxPesoAereoLb} lb · ${c.ft3} ft³`
-                      : `${c.ft3} ft³ · hasta ${c.maxPesoAereoLb} lb`
-                  }
+                  title={key}
+                  subtitle={c.dim}
+                  desc={`${c.ft3} ft³ · hasta ${c.maxPesoAereoLb} lb`}
                 />
               ))}
             </div>
@@ -671,13 +668,14 @@ function ModoCard({ value, selected, onClick, icon, title, desc }: { value: stri
   );
 }
 
-function CajaCard({ value, selected, onClick, title, desc }: { value: string; selected: boolean; onClick: () => void; title: string; desc: string }) {
+function CajaCard({ value, selected, onClick, title, subtitle, desc }: { value: string; selected: boolean; onClick: () => void; title: string; subtitle?: string; desc: string }) {
   return (
     <label className={`radio-card ${selected ? "selected" : ""}`}>
       <input type="radio" name="caja" value={value} checked={selected} onChange={onClick} />
       <span className="ic"><IconBox /></span>
       <div className="body">
         <div className="ttl">{title}</div>
+        {subtitle && <div className="sub-ttl">{subtitle}</div>}
         <div className="desc">{desc}</div>
       </div>
     </label>

@@ -712,3 +712,12 @@
   font-weight: 500;
   line-height: 1.45;
 }
+
+/* Subtítulo no card de caja (dimensões em polegadas) */
+.radio-card .sub-ttl {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  margin-top: 0.05rem;
+}
