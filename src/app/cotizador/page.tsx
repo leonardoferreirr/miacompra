@@ -61,7 +61,10 @@ export default function CotizadorPage() {
   }
 
   const estadoUsa = s.estadoUsaKey ? ESTADOS_USA[s.estadoUsaKey] : null;
-  const ciudadesUsa = estadoUsa ? Object.keys(estadoUsa.ciudades) : [];
+  const ciudadesUsa = useMemo(() => {
+    const entry = ESTADOS_LIST.find((e) => e.key === s.estadoUsaKey);
+    return entry?.ciudades ?? [];
+  }, [s.estadoUsaKey]);
   const ciudadesVe = useMemo(() => {
     const e = ESTADOS_VE_LIST.find((x) => x.key === s.estadoVeKey);
     return e?.ciudades ?? [];
