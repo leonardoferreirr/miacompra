@@ -307,7 +307,7 @@ export default function CotizadorPage() {
                 onClick={() => update("modo", "aereo")}
                 icon={<IconPlane />}
                 title="Aéreo"
-                desc="Más rápido · llegada en 5 a 7 días hábiles"
+                desc="Más rápido · llegada en 5 a 12 días hábiles"
               />
             </div>
 
