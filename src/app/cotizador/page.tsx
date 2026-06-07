@@ -387,11 +387,11 @@ export default function CotizadorPage() {
               </div>
               <div className="row-2">
                 <div className="field">
-                  <label>Población</label>
+                  <label>Ciudad</label>
                   <input value={s.poblacion} onChange={(e) => update("poblacion", e.target.value)} />
                 </div>
                 <div className="field">
-                  <label>Provincia</label>
+                  <label>Estado</label>
                   <input value={s.provincia || s.estadoVeKey} onChange={(e) => update("provincia", e.target.value)} />
                 </div>
               </div>
