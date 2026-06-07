@@ -61,7 +61,7 @@ export default function CotizadorPage() {
   }
 
   const estadoUsa = s.estadoUsaKey ? ESTADOS_USA[s.estadoUsaKey] : null;
-  const ciudadesUsa = estadoUsa?.ciudades ?? [];
+  const ciudadesUsa = estadoUsa ? Object.keys(estadoUsa.ciudades) : [];
   const ciudadesVe = useMemo(() => {
     const e = ESTADOS_VE_LIST.find((x) => x.key === s.estadoVeKey);
     return e?.ciudades ?? [];
@@ -71,11 +71,12 @@ export default function CotizadorPage() {
     if (!s.estadoUsaKey || !s.caja || !s.modo) return null;
     return cotizar({
       estadoKey: s.estadoUsaKey,
+      ciudad: s.ciudadUsa,
       caja: s.caja as Caja,
       modo: s.modo as Modo,
       pesoLb: typeof s.pesoLb === "number" ? s.pesoLb : 0,
     });
-  }, [s.estadoUsaKey, s.caja, s.modo, s.pesoLb]);
+  }, [s.estadoUsaKey, s.ciudadUsa, s.caja, s.modo, s.pesoLb]);
 
   const step1OriginOk = !!(s.estadoUsaKey && s.ciudadUsa && s.estadoVeKey && s.ciudadVe);
   // step1Ok agora cobre TUDO do step 1 (origem+destino+carrinho+termos).
@@ -191,6 +192,7 @@ export default function CotizadorPage() {
         body: JSON.stringify({
           envio: {
             estadoUsaKey: s.estadoUsaKey,
+            ciudadOrigen: s.ciudadUsa,
             origen: `${s.ciudadUsa}, ${estadoUsa?.nombre}`,
             destino: `${s.ciudadVe}, ${s.estadoVeKey}`,
           },

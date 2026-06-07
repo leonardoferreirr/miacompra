@@ -1,92 +1,593 @@
-// Fonte: LatinShip - Análisis de tarifas USA hacia Venezuela
-// Estrutura: estado -> { rate, ciudades }
-// rate.ft3 = tarifa sugerida $/pie cúbico (marítimo)
-// rate.lb  = tarifa sugerida $/libra (aéreo)
-// Ciudades são as ÂNCORAS — subúrbios da região metropolitana caem na cidade-âncora.
+// Fonte: planilha "Detalle Base" da Mia Compra (extraída via Composio)
+// Estrutura: estado -> ciudades -> caja -> { ft3 (marítimo $/ft³), lb (aéreo $/lb) }
+// Cidade ausente cai em fallbackCiudad (a cidade mais cara do estado).
 
 export type Caja = "Small" | "Medium" | "Large";
 export type Modo = "maritimo" | "aereo";
 
 export type BoxSpec = {
   label: string;
-  /** Dimensões físicas externas em polegadas (LxWxH) */
   dim: string;
   ft3: number;
   pesoVolumenLb: number;
-  /** Peso máximo permitido por caja, aplicado em qualquer modo (aéreo ou marítimo). */
   maxPesoAereoLb: number;
 };
 
 export const CAJAS: Record<Caja, BoxSpec> = {
-  Small: { label: "17 × 11 × 11 in", dim: "17×11×11 in", ft3: 1.19, pesoVolumenLb: 12.39, maxPesoAereoLb: 40 },
+  Small:  { label: "17 × 11 × 11 in", dim: "17×11×11 in", ft3: 1.19, pesoVolumenLb: 12.39, maxPesoAereoLb: 40 },
   Medium: { label: "21 × 16 × 15 in", dim: "21×16×15 in", ft3: 2.92, pesoVolumenLb: 30.36, maxPesoAereoLb: 50 },
-  Large: { label: "27 × 16 × 15 in", dim: "27×16×15 in", ft3: 3.75, pesoVolumenLb: 39.04, maxPesoAereoLb: 50 },
+  Large:  { label: "27 × 16 × 15 in", dim: "27×16×15 in", ft3: 3.75, pesoVolumenLb: 39.04, maxPesoAereoLb: 50 },
 };
 
+export type TarifaCaja = { ft3: number; lb: number };
+export type CiudadTarifa = { Small: TarifaCaja; Medium: TarifaCaja; Large: TarifaCaja };
 export type EstadoRate = {
   nombre: string;
-  ft3: number;
-  lb: number;
-  clasif: "Alta" | "Media" | "Baja";
-  ciudades: string[];
+  fallbackCiudad: string;
+  ciudades: Record<string, CiudadTarifa>;
 };
 
 export const ESTADOS_USA: Record<string, EstadoRate> = {
-  ALABAMA:        { nombre: "Alabama",        ft3: 48,  lb: 6.25, clasif: "Baja",  ciudades: ["Birmingham", "Huntsville", "Mobile", "Montgomery", "Tuscaloosa"] },
-  ALASKA:         { nombre: "Alaska",         ft3: 110, lb: 12.25,clasif: "Alta",  ciudades: ["Anchorage", "Fairbanks", "Juneau", "Sitka", "Wasilla"] },
-  ARIZONA:        { nombre: "Arizona",        ft3: 61,  lb: 7.75, clasif: "Alta",  ciudades: ["Chandler", "Glendale", "Kingman", "Mesa", "Phoenix", "Tucson", "Yuma"] },
-  ARKANSAS:       { nombre: "Arkansas",       ft3: 50,  lb: 6.5,  clasif: "Baja",  ciudades: ["Fayetteville", "Fort Smith", "Jonesboro", "Little Rock", "Springdale"] },
-  CALIFORNIA:     { nombre: "California",     ft3: 60,  lb: 7.5,  clasif: "Alta",  ciudades: ["Los Angeles", "Sacramento", "San Diego", "San Francisco", "San José"] },
-  COLORADO:       { nombre: "Colorado",       ft3: 59,  lb: 7.5,  clasif: "Alta",  ciudades: ["Aurora", "Colorado Springs", "Denver", "Lakewood", "Pueblo"] },
-  CONNECTICUT:    { nombre: "Connecticut",    ft3: 51,  lb: 6.5,  clasif: "Media", ciudades: ["Bridgeport", "Hartford", "New Haven", "Norwalk", "Stamford"] },
-  DELAWARE:       { nombre: "Delaware",       ft3: 49,  lb: 6.5,  clasif: "Baja",  ciudades: ["Dover", "Georgetown", "Middletown", "Newark", "Seaford"] },
-  FLORIDA:        { nombre: "Florida",        ft3: 47,  lb: 6.25, clasif: "Baja",  ciudades: ["Cape Coral", "Fort Lauderdale", "Hialeah", "Jacksonville", "Miami", "Orlando", "Port St. Lucie", "St. Petersburg", "Tallahassee", "Tampa"] },
-  GEORGIA:        { nombre: "Georgia",        ft3: 53,  lb: 6.75, clasif: "Media", ciudades: ["Athens", "Atlanta", "Columbus", "Gainesville", "Marietta", "Norcross", "Savannah"] },
-  HAWAII:         { nombre: "Hawaii",         ft3: 105, lb: 12,   clasif: "Alta",  ciudades: ["Honolulu"] },
-  IDAHO:          { nombre: "Idaho",          ft3: 55,  lb: 7,    clasif: "Alta",  ciudades: ["Boise", "Caldwell", "Meridian", "Nampa", "Pocatello"] },
-  ILLINOIS:       { nombre: "Illinois",       ft3: 51,  lb: 6.5,  clasif: "Media", ciudades: ["Aurora", "Chicago", "Cicero", "Joliet", "Springfield"] },
-  INDIANA:        { nombre: "Indiana",        ft3: 51,  lb: 6.5,  clasif: "Media", ciudades: ["Carmel", "Evansville", "Fort Wayne", "Indianapolis", "South Bend"] },
-  IOWA:           { nombre: "Iowa",           ft3: 51,  lb: 6.5,  clasif: "Media", ciudades: ["Cedar Rapids", "Davenport", "Des Moines", "Iowa City", "Waterloo"] },
-  KANSAS:         { nombre: "Kansas",         ft3: 51,  lb: 6.75, clasif: "Media", ciudades: ["Kansas City", "Lawrence", "Overland Park", "Topeka", "Wichita"] },
-  KENTUCKY:       { nombre: "Kentucky",       ft3: 49,  lb: 6.5,  clasif: "Baja",  ciudades: ["Bowling Green", "Florence", "Lexington", "Louisville", "Richmond"] },
-  LOUISIANA:      { nombre: "Louisiana",      ft3: 49,  lb: 6.5,  clasif: "Baja",  ciudades: ["Baton Rouge", "Lafayette", "Lake Charles", "New Orleans", "Shreveport"] },
-  MAINE:          { nombre: "Maine",          ft3: 52,  lb: 6.75, clasif: "Media", ciudades: ["Auburn", "Augusta", "Bangor", "Lewiston", "Portland", "South Portland"] },
-  MARYLAND:       { nombre: "Maryland",       ft3: 48,  lb: 6.5,  clasif: "Baja",  ciudades: ["Annapolis", "Baltimore", "Frederick", "Gaithersburg", "Rockville"] },
-  MASSACHUSETTS:  { nombre: "Massachusetts",  ft3: 51,  lb: 6.5,  clasif: "Media", ciudades: ["Boston", "Brockton", "Cambridge", "New Bedford", "Worcester"] },
-  MICHIGAN:       { nombre: "Michigan",       ft3: 51,  lb: 6.5,  clasif: "Baja",  ciudades: ["Ann Arbor", "Detroit", "Grand Rapids", "Lansing", "Sterling Heights", "Warren"] },
-  MINNESOTA:      { nombre: "Minnesota",      ft3: 53,  lb: 6.75, clasif: "Media", ciudades: ["Bloomington", "Duluth", "Minneapolis", "Rochester", "Saint Paul"] },
-  MISSISSIPPI:    { nombre: "Mississippi",    ft3: 48,  lb: 6.5,  clasif: "Baja",  ciudades: ["Biloxi", "Gulfport", "Jackson", "Olive Branch", "Southaven"] },
-  MISSOURI:       { nombre: "Missouri",       ft3: 51,  lb: 6.5,  clasif: "Baja",  ciudades: ["Columbia", "Independence", "Jefferson City", "Kansas City", "St. Louis"] },
-  MONTANA:        { nombre: "Montana",        ft3: 54,  lb: 7,    clasif: "Alta",  ciudades: ["Billings", "Great Falls", "Helena", "Kalispell", "Missoula"] },
-  NEBRASKA:       { nombre: "Nebraska",       ft3: 51,  lb: 6.75, clasif: "Media", ciudades: ["Bellevue", "Fremont", "Grand Island", "Lincoln", "Omaha"] },
-  NEVADA:         { nombre: "Nevada",         ft3: 55,  lb: 7,    clasif: "Alta",  ciudades: ["Carson City", "Henderson", "Las Vegas", "North Las Vegas", "Reno"] },
-  NEW_HAMPSHIRE:  { nombre: "New Hampshire",  ft3: 51,  lb: 6.5,  clasif: "Baja",  ciudades: ["Concord", "Derry", "Manchester", "Nashua", "Rochester"] },
-  NEW_JERSEY:     { nombre: "New Jersey",     ft3: 57,  lb: 7.25, clasif: "Alta",  ciudades: ["Elizabeth", "Jersey City", "Newark", "Paterson", "Trenton", "Union City"] },
-  NEW_MEXICO:     { nombre: "New Mexico",     ft3: 53,  lb: 6.75, clasif: "Alta",  ciudades: ["Albuquerque", "Las Cruces", "Rio Rancho", "Roswell", "Santa Fe"] },
-  NEW_YORK:       { nombre: "New York",       ft3: 58,  lb: 7.25, clasif: "Alta",  ciudades: ["Albany", "Bronx", "New York City", "Queens", "Yonkers"] },
-  NORTH_CAROLINA: { nombre: "North Carolina", ft3: 48,  lb: 6.5,  clasif: "Baja",  ciudades: ["Charlotte", "Durham", "Greensboro", "Raleigh", "Winston-Salem"] },
-  NORTH_DAKOTA:   { nombre: "North Dakota",   ft3: 55,  lb: 7,    clasif: "Alta",  ciudades: ["Bismarck", "Fargo", "Grand Forks", "Minot", "West Fargo"] },
-  OHIO:           { nombre: "Ohio",           ft3: 50,  lb: 6.5,  clasif: "Baja",  ciudades: ["Akron", "Cincinnati", "Cleveland", "Columbus", "Dayton"] },
-  OKLAHOMA:       { nombre: "Oklahoma",       ft3: 51,  lb: 6.5,  clasif: "Media", ciudades: ["Broken Arrow", "Lawton", "Norman", "Oklahoma City", "Tulsa"] },
-  OREGON:         { nombre: "Oregon",         ft3: 54,  lb: 7,    clasif: "Alta",  ciudades: ["Beaverton", "Eugene", "Gresham", "Portland", "Salem"] },
-  PENNSYLVANIA:   { nombre: "Pennsylvania",   ft3: 48,  lb: 6.5,  clasif: "Baja",  ciudades: ["Allentown", "Erie", "Harrisburg", "Philadelphia", "Pittsburgh", "Reading"] },
-  RHODE_ISLAND:   { nombre: "Rhode Island",   ft3: 51,  lb: 6.5,  clasif: "Media", ciudades: ["Cranston", "East Providence", "Pawtucket", "Providence", "Warwick"] },
-  SOUTH_CAROLINA: { nombre: "South Carolina", ft3: 48,  lb: 6.25, clasif: "Baja",  ciudades: ["Charleston", "Columbia", "Greenville", "North Charleston", "Spartanburg"] },
-  SOUTH_DAKOTA:   { nombre: "South Dakota",   ft3: 53,  lb: 6.75, clasif: "Media", ciudades: ["Aberdeen", "Deadwood", "Pierre", "Rapid City", "Sioux Falls"] },
-  TENNESSEE:      { nombre: "Tennessee",      ft3: 49,  lb: 6.5,  clasif: "Baja",  ciudades: ["Chattanooga", "Knoxville", "Memphis", "Murfreesboro", "Nashville"] },
-  TEXAS:          { nombre: "Texas",          ft3: 51,  lb: 6.75, clasif: "Media", ciudades: ["Austin", "Dallas", "El Paso", "Houston", "San Antonio"] },
-  UTAH:           { nombre: "Utah",           ft3: 55,  lb: 7,    clasif: "Alta",  ciudades: ["Ogden", "Orem", "Salt Lake City", "West Jordan", "West Valley City"] },
-  VERMONT:        { nombre: "Vermont",        ft3: 51,  lb: 6.5,  clasif: "Baja",  ciudades: ["Barre", "Burlington", "Montpelier", "Rutland", "St. Albans"] },
-  VIRGINIA:       { nombre: "Virginia",       ft3: 49,  lb: 6.5,  clasif: "Baja",  ciudades: ["Chesapeake", "Newport News", "Norfolk", "Richmond", "Virginia Beach"] },
-  WASHINGTON:     { nombre: "Washington",     ft3: 52,  lb: 7,    clasif: "Alta",  ciudades: ["Kent", "Olympia", "Seattle", "Spokane", "Tacoma", "Vancouver"] },
-  WEST_VIRGINIA:  { nombre: "West Virginia",  ft3: 49,  lb: 6.5,  clasif: "Baja",  ciudades: ["Charleston", "Huntington", "Morgantown", "Parkersburg", "Wheeling"] },
-  WISCONSIN:      { nombre: "Wisconsin",      ft3: 51,  lb: 6.75, clasif: "Media", ciudades: ["Green Bay", "Kenosha", "Madison", "Milwaukee", "Racine"] },
-  WYOMING:        { nombre: "Wyoming",        ft3: 54,  lb: 7,    clasif: "Alta",  ciudades: ["Casper", "Cheyenne", "Laramie", "Sheridan"] },
+  ALABAMA: {
+    nombre: "Alabama",
+    fallbackCiudad: "Birmingham",
+    ciudades: {
+      "Birmingham": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Huntsville": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Mobile": { Small: { ft3: 50.9416, lb: 6.5354 }, Medium: { ft3: 44.9377, lb: 5.9586 }, Large: { ft3: 43.7293, lb: 5.8425 } },
+      "Montgomery": { Small: { ft3: 50.9416, lb: 6.5354 }, Medium: { ft3: 44.9377, lb: 5.9586 }, Large: { ft3: 43.7293, lb: 5.8425 } },
+      "Tuscaloosa": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 44.9377, lb: 5.9586 }, Large: { ft3: 43.7293, lb: 5.8425 } },
+    },
+  },
+  ALASKA: {
+    nombre: "Alaska",
+    fallbackCiudad: "Anchorage",
+    ciudades: {
+      "Anchorage": { Small: { ft3: 157.8138, lb: 16.802 }, Medium: { ft3: 96.1846, lb: 10.8816 }, Large: { ft3: 83.588, lb: 9.6715 } },
+      "Fairbanks": { Small: { ft3: 157.8138, lb: 16.802 }, Medium: { ft3: 96.1846, lb: 10.8816 }, Large: { ft3: 83.588, lb: 9.6715 } },
+      "Juneau": { Small: { ft3: 157.8138, lb: 16.802 }, Medium: { ft3: 96.1846, lb: 10.8816 }, Large: { ft3: 83.588, lb: 9.6715 } },
+      "Sitka": { Small: { ft3: 157.8138, lb: 16.802 }, Medium: { ft3: 96.1846, lb: 10.8816 }, Large: { ft3: 83.588, lb: 9.6715 } },
+      "Wasilla": { Small: { ft3: 157.8138, lb: 16.802 }, Medium: { ft3: 96.1846, lb: 10.8816 }, Large: { ft3: 83.588, lb: 9.6715 } },
+    },
+  },
+  ARIZONA: {
+    nombre: "Arizona",
+    fallbackCiudad: "Winslow-pueblo",
+    ciudades: {
+      "Glendale": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "Mesa": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "Phoenix": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "Tucson": { Small: { ft3: 62.1984, lb: 7.6167 }, Medium: { ft3: 48.764, lb: 6.3262 }, Large: { ft3: 47.9907, lb: 6.2519 } },
+      "Winslow-pueblo": { Small: { ft3: 88.173, lb: 10.112 }, Medium: { ft3: 61.0589, lb: 7.5073 }, Large: { ft3: 56.268, lb: 7.047 } },
+      "Yuma": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+    },
+  },
+  ARKANSAS: {
+    nombre: "Arkansas",
+    fallbackCiudad: "Fayeteville",
+    ciudades: {
+      "Fayeteville": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Forth Smith": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Jonesboro": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Little Rock": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Springdale": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+    },
+  },
+  CALIFORNIA: {
+    nombre: "California",
+    fallbackCiudad: "Los Angeles",
+    ciudades: {
+      "Los Angeles": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "Sacramento": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "San Diego": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "San Francisco": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "San José": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+      "Susanville-pueblo": { Small: { ft3: 75.1521, lb: 8.8611 }, Medium: { ft3: 55.7446, lb: 6.9968 }, Large: { ft3: 52.1347, lb: 6.65 } },
+    },
+  },
+  COLORADO: {
+    nombre: "Colorado",
+    fallbackCiudad: "Aurora",
+    ciudades: {
+      "Aurora": { Small: { ft3: 72.0607, lb: 8.5642 }, Medium: { ft3: 54.6234, lb: 6.8891 }, Large: { ft3: 51.2627, lb: 6.5662 } },
+      "Colorado Springs": { Small: { ft3: 72.0607, lb: 8.5642 }, Medium: { ft3: 54.6234, lb: 6.8891 }, Large: { ft3: 51.2627, lb: 6.5662 } },
+      "Denver": { Small: { ft3: 72.0607, lb: 8.5642 }, Medium: { ft3: 54.6234, lb: 6.8891 }, Large: { ft3: 51.2627, lb: 6.5662 } },
+      "Lakewood": { Small: { ft3: 72.0607, lb: 8.5642 }, Medium: { ft3: 54.6234, lb: 6.8891 }, Large: { ft3: 51.2627, lb: 6.5662 } },
+      "Pueblo": { Small: { ft3: 72.0607, lb: 8.5642 }, Medium: { ft3: 54.6234, lb: 6.8891 }, Large: { ft3: 51.2627, lb: 6.5662 } },
+    },
+  },
+  CONNECTICUT: {
+    nombre: "Connecticut",
+    fallbackCiudad: "Bridgeport",
+    ciudades: {
+      "Bridgeport": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Hartford": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "New Heaven": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Norwalk": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Stamford": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  DELAWARE: {
+    nombre: "Delaware",
+    fallbackCiudad: "Dover",
+    ciudades: {
+      "Dover": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Georgetown": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Middeltown": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Newark": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Seaford": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+    },
+  },
+  FLORIDA: {
+    nombre: "Florida",
+    fallbackCiudad: "Jacksonville",
+    ciudades: {
+      "Cape Coral": { Small: { ft3: 50.9332, lb: 6.5346 }, Medium: { ft3: 44.1663, lb: 5.8845 }, Large: { ft3: 43.1293, lb: 5.7849 } },
+      "Fort Lauderdale": { Small: { ft3: 50.9332, lb: 6.5346 }, Medium: { ft3: 44.1663, lb: 5.8845 }, Large: { ft3: 43.1293, lb: 5.7849 } },
+      "Hialeah": { Small: { ft3: 50.9332, lb: 6.5346 }, Medium: { ft3: 44.1663, lb: 5.8845 }, Large: { ft3: 43.1293, lb: 5.7849 } },
+      "Jacksonville": { Small: { ft3: 50.9416, lb: 6.5354 }, Medium: { ft3: 44.9377, lb: 5.9586 }, Large: { ft3: 43.7293, lb: 5.8425 } },
+      "Miami": { Small: { ft3: 50.9332, lb: 6.5346 }, Medium: { ft3: 44.1663, lb: 5.8845 }, Large: { ft3: 43.1293, lb: 5.7849 } },
+      "Orlando": { Small: { ft3: 50.6644, lb: 6.5087 }, Medium: { ft3: 44.0566, lb: 5.874 }, Large: { ft3: 43.044, lb: 5.7767 } },
+      "Port St.lucie": { Small: { ft3: 50.9332, lb: 6.5346 }, Medium: { ft3: 44.1663, lb: 5.8845 }, Large: { ft3: 43.1293, lb: 5.7849 } },
+      "St.petesburg": { Small: { ft3: 50.9332, lb: 6.5346 }, Medium: { ft3: 44.1663, lb: 5.8845 }, Large: { ft3: 43.1293, lb: 5.7849 } },
+      "Tallahessee": { Small: { ft3: 50.6728, lb: 6.5095 }, Medium: { ft3: 44.8143, lb: 5.9467 }, Large: { ft3: 43.6333, lb: 5.8333 } },
+      "Tampa": { Small: { ft3: 49.8495, lb: 6.4305 }, Medium: { ft3: 44.0531, lb: 5.8736 }, Large: { ft3: 42.916, lb: 5.7644 } },
+    },
+  },
+  GEORGIA: {
+    nombre: "Georgia",
+    fallbackCiudad: "Gainsville",
+    ciudades: {
+      "Atlanta": { Small: { ft3: 63.3325, lb: 7.7257 }, Medium: { ft3: 49.9949, lb: 6.4444 }, Large: { ft3: 47.6627, lb: 6.2204 } },
+      "Gainsville": { Small: { ft3: 65.5502, lb: 7.9387 }, Medium: { ft3: 51.1571, lb: 6.5561 }, Large: { ft3: 48.5667, lb: 6.3072 } },
+      "Marietta": { Small: { ft3: 71.733, lb: 8.5327 }, Medium: { ft3: 49.9949, lb: 6.4444 }, Large: { ft3: 47.6627, lb: 6.2204 } },
+      "Norcross": { Small: { ft3: 63.3325, lb: 7.7257 }, Medium: { ft3: 49.9949, lb: 6.4444 }, Large: { ft3: 47.6627, lb: 6.2204 } },
+    },
+  },
+  HAWAII: {
+    nombre: "Hawaii",
+    fallbackCiudad: "Honolulu",
+    ciudades: {
+      "Honolulu": { Small: { ft3: 145.8682, lb: 15.6545 }, Medium: { ft3: 90.4589, lb: 10.3316 }, Large: { ft3: 79.1347, lb: 9.2437 } },
+    },
+  },
+  IDAHO: {
+    nombre: "Idaho",
+    fallbackCiudad: "Boise",
+    ciudades: {
+      "Boise": { Small: { ft3: 62.7612, lb: 7.6708 }, Medium: { ft3: 51.9526, lb: 6.6325 }, Large: { ft3: 49.2653, lb: 6.3743 } },
+      "Caldwell": { Small: { ft3: 62.7612, lb: 7.6708 }, Medium: { ft3: 51.9526, lb: 6.6325 }, Large: { ft3: 49.2653, lb: 6.3743 } },
+      "Meridian": { Small: { ft3: 62.7612, lb: 7.6708 }, Medium: { ft3: 51.9526, lb: 6.6325 }, Large: { ft3: 49.2653, lb: 6.3743 } },
+      "Nampa": { Small: { ft3: 62.7612, lb: 7.6708 }, Medium: { ft3: 51.9526, lb: 6.6325 }, Large: { ft3: 49.2653, lb: 6.3743 } },
+      "Pocatello": { Small: { ft3: 62.7612, lb: 7.6708 }, Medium: { ft3: 51.9526, lb: 6.6325 }, Large: { ft3: 49.2653, lb: 6.3743 } },
+    },
+  },
+  ILLINOIS: {
+    nombre: "Illinois",
+    fallbackCiudad: "Aurora",
+    ciudades: {
+      "Aurora": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Chicago": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Cicero": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Joliet": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Springfield": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+    },
+  },
+  INDIANA: {
+    nombre: "Indiana",
+    fallbackCiudad: "Carmel",
+    ciudades: {
+      "Carmel": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Evansville": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Fort Wayne": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Indianapolis": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "South Bend": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+    },
+  },
+  IOWA: {
+    nombre: "Iowa",
+    fallbackCiudad: "Cedar Rapids",
+    ciudades: {
+      "Cedar Rapids": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Davenport": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Des Moines": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Iowa City": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Waterloo": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+    },
+  },
+  KANSAS: {
+    nombre: "Kansas",
+    fallbackCiudad: "Kansas City",
+    ciudades: {
+      "Kansas City": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Lawrence": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Overland Park": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Topeka": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+      "Wichita": { Small: { ft3: 56.612, lb: 7.0801 }, Medium: { ft3: 47.8143, lb: 6.2349 }, Large: { ft3: 45.9667, lb: 6.0574 } },
+    },
+  },
+  KENTUCKY: {
+    nombre: "Kentucky",
+    fallbackCiudad: "Bowling Green",
+    ciudades: {
+      "Bowling Green": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Florence": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Lexington": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Louisville": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Richmond": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+    },
+  },
+  LOUISIANA: {
+    nombre: "Louisiana",
+    fallbackCiudad: "Baton Rouge",
+    ciudades: {
+      "Baton Rouge": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Lafayette": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Lake Charles": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "New Orleans": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+      "Shreveport": { Small: { ft3: 53.1593, lb: 6.7484 }, Medium: { ft3: 46.1, lb: 6.0703 }, Large: { ft3: 44.6333, lb: 5.9294 } },
+    },
+  },
+  MAINE: {
+    nombre: "Maine",
+    fallbackCiudad: "Auburn",
+    ciudades: {
+      "Auburn": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Bangor": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Lewiston": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Portland": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "South Portland": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+    },
+  },
+  MARYLAND: {
+    nombre: "Maryland",
+    fallbackCiudad: "Annapolis",
+    ciudades: {
+      "Annapolis": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Baltimmore": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Fredrick": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Gaithersburg": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Rockville": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  MASSACHUSETTS: {
+    nombre: "Massachusetts",
+    fallbackCiudad: "Boston",
+    ciudades: {
+      "Boston": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Brockton": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Cambridge": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "New Bedford": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Worcester": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  MICHIGAN: {
+    nombre: "Michigan",
+    fallbackCiudad: "Ann Arbor",
+    ciudades: {
+      "Ann Arbor": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Detroit": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Grand Rapids": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Sterling Heights": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Warren": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  MINNESOTA: {
+    nombre: "Minnesota",
+    fallbackCiudad: "Bloomington",
+    ciudades: {
+      "Bloomington": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Duluth": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Minneapolis": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Rochester": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Saint Paul": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+    },
+  },
+  MISSISSIPPI: {
+    nombre: "Mississippi",
+    fallbackCiudad: "Biloxi",
+    ciudades: {
+      "Biloxi": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Gulfport": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Jackson": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Olive Branch": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Southaven": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  MISSOURI: {
+    nombre: "Missouri",
+    fallbackCiudad: "Columbia",
+    ciudades: {
+      "Columbia": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Independence": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Jefferson City": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Kansas City": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "St.louis": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  MONTANA: {
+    nombre: "Montana",
+    fallbackCiudad: "Billings",
+    ciudades: {
+      "Billings": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Great Falls": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Helena": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Kalispell": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Missoula": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+    },
+  },
+  NEBRASKA: {
+    nombre: "Nebraska",
+    fallbackCiudad: "Grand Island",
+    ciudades: {
+      "Bellevue": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Fremont": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Grand Island": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Lincoln": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Omaha": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  NEVADA: {
+    nombre: "Nevada",
+    fallbackCiudad: "Carson City",
+    ciudades: {
+      "Carson City": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Henderson": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Las Vegas": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "North Las Vegas": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Reno": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+    },
+  },
+  NEW_HAMPSHIRE: {
+    nombre: "New Hampshire",
+    fallbackCiudad: "Concord",
+    ciudades: {
+      "Concord": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Derry": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Manchester": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Nashua": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Rochester": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  NEW_JERSEY: {
+    nombre: "New Jersey",
+    fallbackCiudad: "Elizabeth",
+    ciudades: {
+      "Elizabeth": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+      "Jersey City": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+      "Newark": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+      "Paterson": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+      "Union City": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+    },
+  },
+  NEW_MEXICO: {
+    nombre: "New Mexico",
+    fallbackCiudad: "Albuquerque",
+    ciudades: {
+      "Albuquerque": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Las Cruces": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Rio Rancho": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Roswell": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Santa Fe": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+    },
+  },
+  NEW_YORK: {
+    nombre: "New York",
+    fallbackCiudad: "Bronx",
+    ciudades: {
+      "Bronx": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+      "New York City": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+      "Queens": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+      "Yonkers": { Small: { ft3: 69.0028, lb: 8.2704 }, Medium: { ft3: 52.8714, lb: 6.7208 }, Large: { ft3: 49.9, lb: 6.4353 } },
+    },
+  },
+  NORTH_CAROLINA: {
+    nombre: "North Carolina",
+    fallbackCiudad: "Charlotte",
+    ciudades: {
+      "Charlotte": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Durham": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Greensboro": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Raleigh": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Winston-salem": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  NORTH_DAKOTA: {
+    nombre: "North Dakota",
+    fallbackCiudad: "Bismarck",
+    ciudades: {
+      "Bismarck": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Fargo": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Grand Forks": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Minot": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "West Fargo": { Small: { ft3: 66.8775, lb: 8.0662 }, Medium: { ft3: 48.9834, lb: 6.3473 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+    },
+  },
+  OHIO: {
+    nombre: "Ohio",
+    fallbackCiudad: "Cleveland",
+    ciudades: {
+      "Cincinnati": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Cleveland": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  OKLAHOMA: {
+    nombre: "Oklahoma",
+    fallbackCiudad: "Lawton",
+    ciudades: {
+      "Lawton": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Norman": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  OREGON: {
+    nombre: "Oregon",
+    fallbackCiudad: "Beaverton",
+    ciudades: {
+      "Beaverton": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Eugene": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Gresham": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Portland": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Salem": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+    },
+  },
+  PENNSYLVANIA: {
+    nombre: "Pennsylvania",
+    fallbackCiudad: "Allentown",
+    ciudades: {
+      "Allentown": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Erie": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Philadelphia": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Pittsburg": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Reading": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  RHODE_ISLAND: {
+    nombre: "Rhode Island",
+    fallbackCiudad: "Cranston",
+    ciudades: {
+      "Cranston": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "East Providence": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Pawtucket": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Providence": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Warwick": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  SOUTH_CAROLINA: {
+    nombre: "South Carolina",
+    fallbackCiudad: "Greenville",
+    ciudades: {
+      "Charleston": { Small: { ft3: 50.9248, lb: 6.5337 }, Medium: { ft3: 44.9343, lb: 5.9583 }, Large: { ft3: 43.7267, lb: 5.8423 } },
+      "Columbia": { Small: { ft3: 50.9248, lb: 6.5337 }, Medium: { ft3: 44.9343, lb: 5.9583 }, Large: { ft3: 43.7267, lb: 5.8423 } },
+      "Greenville": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "North Charleston": { Small: { ft3: 50.9248, lb: 6.5337 }, Medium: { ft3: 44.9343, lb: 5.9583 }, Large: { ft3: 43.7267, lb: 5.8423 } },
+      "Spartanburg": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  SOUTH_DAKOTA: {
+    nombre: "South Dakota",
+    fallbackCiudad: "Aberdeen",
+    ciudades: {
+      "Aberdeen": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Deadwood": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Pierre": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Rapid City": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Sioux Falls": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+    },
+  },
+  TENNESSEE: {
+    nombre: "Tennessee",
+    fallbackCiudad: "Chatanooga",
+    ciudades: {
+      "Chatanooga": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Knoxville": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Memphis": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Murfreesboro": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Nashville": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  TEXAS: {
+    nombre: "Texas",
+    fallbackCiudad: "Alpine-pueblo",
+    ciudades: {
+      "Alpine-pueblo": { Small: { ft3: 59.2078, lb: 7.3294 }, Medium: { ft3: 49.3331, lb: 6.3808 }, Large: { ft3: 47.148, lb: 6.1709 } },
+      "Austin": { Small: { ft3: 56.2172, lb: 7.0422 }, Medium: { ft3: 47.6223, lb: 6.2165 }, Large: { ft3: 45.8173, lb: 6.0431 } },
+      "Dallas": { Small: { ft3: 56.2172, lb: 7.0422 }, Medium: { ft3: 47.6223, lb: 6.2165 }, Large: { ft3: 45.8173, lb: 6.0431 } },
+      "El Paso": { Small: { ft3: 59.2078, lb: 7.3294 }, Medium: { ft3: 49.3331, lb: 6.3808 }, Large: { ft3: 47.148, lb: 6.1709 } },
+      "Houston": { Small: { ft3: 52.8485, lb: 6.7186 }, Medium: { ft3: 45.9457, lb: 6.0554 }, Large: { ft3: 44.5133, lb: 5.9178 } },
+      "San Antonio": { Small: { ft3: 56.2172, lb: 7.0422 }, Medium: { ft3: 47.6223, lb: 6.2165 }, Large: { ft3: 45.8173, lb: 6.0431 } },
+    },
+  },
+  UTAH: {
+    nombre: "Utah",
+    fallbackCiudad: "Ogden",
+    ciudades: {
+      "Ogden": { Small: { ft3: 62.2236, lb: 7.6192 }, Medium: { ft3: 50.2554, lb: 6.4694 }, Large: { ft3: 49.5987, lb: 6.4064 } },
+      "Orem": { Small: { ft3: 62.2236, lb: 7.6192 }, Medium: { ft3: 50.2554, lb: 6.4694 }, Large: { ft3: 49.5987, lb: 6.4064 } },
+      "Salt Lake City": { Small: { ft3: 62.2236, lb: 7.6192 }, Medium: { ft3: 50.4269, lb: 6.4859 }, Large: { ft3: 47.9987, lb: 6.2526 } },
+      "West Jordan": { Small: { ft3: 62.2236, lb: 7.6192 }, Medium: { ft3: 50.2554, lb: 6.4694 }, Large: { ft3: 49.5987, lb: 6.4064 } },
+      "West Valley City": { Small: { ft3: 62.2236, lb: 7.6192 }, Medium: { ft3: 50.2554, lb: 6.4694 }, Large: { ft3: 49.5987, lb: 6.4064 } },
+    },
+  },
+  VERMONT: {
+    nombre: "Vermont",
+    fallbackCiudad: "Montpelier",
+    ciudades: {
+      "Montpelier": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Burlington": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Rutland": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Barre": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "St. Albans": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  VIRGINIA: {
+    nombre: "Virginia",
+    fallbackCiudad: "Richmond",
+    ciudades: {
+      "Richmond": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Virginia Beach": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Norfolk": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Chesapeake": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Newport News": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  WASHINGTON: {
+    nombre: "Washington",
+    fallbackCiudad: "Seattle",
+    ciudades: {
+      "Seattle": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Spokane": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Tacoma": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Vancouver": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Kent": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+    },
+  },
+  WEST_VIRGINIA: {
+    nombre: "West Virginia",
+    fallbackCiudad: "Charleston",
+    ciudades: {
+      "Charleston": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Huntington": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Morgantown": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Parkersburg": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+      "Wheeling": { Small: { ft3: 53.1425, lb: 6.7468 }, Medium: { ft3: 46.0931, lb: 6.0696 }, Large: { ft3: 44.628, lb: 5.9288 } },
+    },
+  },
+  WISCONSIN: {
+    nombre: "Wisconsin",
+    fallbackCiudad: "Milwaukee",
+    ciudades: {
+      "Milwaukee": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Madison": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Green Bay": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Kenosha": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+      "Racine": { Small: { ft3: 56.5952, lb: 7.0785 }, Medium: { ft3: 47.8074, lb: 6.2343 }, Large: { ft3: 45.9613, lb: 6.0569 } },
+    },
+  },
+  WYOMING: {
+    nombre: "Wyoming",
+    fallbackCiudad: "Casper",
+    ciudades: {
+      "Casper": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Laramie": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Sheridan": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+      "Cheyenne": { Small: { ft3: 59.653, lb: 7.3722 }, Medium: { ft3: 49.556, lb: 6.4023 }, Large: { ft3: 47.3213, lb: 6.1876 } },
+      "Rockspring-pueblo": { Small: { ft3: 62.736, lb: 7.6684 }, Medium: { ft3: 50.6737, lb: 6.5096 }, Large: { ft3: 48.1907, lb: 6.2711 } },
+    },
+  },
 };
 
-// Cálculo do preço — fonte única de verdade
+export const ESTADOS_LIST = Object.entries(ESTADOS_USA)
+  .map(([key, e]) => ({ key, nombre: e.nombre, ciudades: Object.keys(e.ciudades) }))
+  .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+/** Arredonda pra cima até 2 casas decimais — cliente nunca paga menos do que a tarifa real. */
+function roundUp2(n: number): number {
+  return Math.ceil(n * 100) / 100;
+}
+
 export function cotizar(opts: {
   estadoKey: string;
+  ciudad?: string;
   caja: Caja;
   modo: Modo;
   pesoLb: number;
@@ -94,24 +595,13 @@ export function cotizar(opts: {
   const e = ESTADOS_USA[opts.estadoKey];
   const c = CAJAS[opts.caja];
   if (!e || !c) return { total: 0, detalle: "Datos incompletos" };
-
+  const ciudadKey = (opts.ciudad && e.ciudades[opts.ciudad]) ? opts.ciudad : e.fallbackCiudad;
+  const tarifa = e.ciudades[ciudadKey][opts.caja];
   if (opts.modo === "maritimo") {
-    const total = e.ft3 * c.ft3;
-    return {
-      total,
-      detalle: `${c.ft3} ft³ × $${e.ft3.toFixed(2)}/ft³`,
-    };
+    const total = roundUp2(tarifa.ft3 * c.ft3);
+    return { total, detalle: `${c.ft3} ft³ × $${tarifa.ft3.toFixed(2)}/ft³ (${ciudadKey})` };
   }
-  // aéreo: max(peso real, peso volumen)
   const pesoFinal = Math.max(opts.pesoLb, c.pesoVolumenLb);
-  const total = e.lb * pesoFinal;
-  return {
-    total,
-    detalle: `${pesoFinal.toFixed(2)} lb × $${e.lb.toFixed(2)}/lb`,
-  };
+  const total = roundUp2(tarifa.lb * pesoFinal);
+  return { total, detalle: `${pesoFinal.toFixed(2)} lb × $${tarifa.lb.toFixed(2)}/lb (${ciudadKey})` };
 }
-
-// Lista plana de estados ordenada alfabeticamente
-export const ESTADOS_LIST = Object.entries(ESTADOS_USA)
-  .map(([key, e]) => ({ key, ...e }))
-  .sort((a, b) => a.nombre.localeCompare(b.nombre));

@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 type Payload = {
   envio: {
     estadoUsaKey: string;
+    ciudadOrigen?: string;
     origen: string;
     destino: string;
   };
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
       }
       const cot = cotizar({
         estadoKey: envio.estadoUsaKey,
+        ciudad: envio.ciudadOrigen,
         caja: it.caja,
         modo: it.modo,
         pesoLb: pesoLbNum,
