@@ -80,13 +80,19 @@ export default function CotizadorPage() {
   const step1Ok = !!(s.estadoUsaKey && s.ciudadUsa && s.estadoVeKey && s.ciudadVe);
   const step2Ok = useMemo(() => {
     if (!s.modo || !s.caja) return false;
-    if (s.modo === "aereo") {
-      const peso = typeof s.pesoLb === "number" ? s.pesoLb : 0;
-      const max = CAJAS[s.caja as Caja].maxPesoAereoLb;
-      return peso > 0 && peso <= max;
-    }
+    const peso = typeof s.pesoLb === "number" ? s.pesoLb : 0;
+    const max = CAJAS[s.caja as Caja].maxPesoAereoLb;
+    if (peso <= 0) return false;
+    if (peso > max) return false;
     return true;
   }, [s.modo, s.caja, s.pesoLb]);
+
+  // Indica se o peso excede o limite da caja selecionada (mostra aviso vermelho)
+  const pesoExcedido = useMemo(() => {
+    if (!s.caja) return false;
+    const peso = typeof s.pesoLb === "number" ? s.pesoLb : 0;
+    return peso > CAJAS[s.caja as Caja].maxPesoAereoLb;
+  }, [s.caja, s.pesoLb]);
   // step3Ok ainda é exportado para futura validação opcional, mas a UI
   // não bloqueia mais o pagamento — o cliente pode pagar antes de
   // preencher os dados do destinatário (Leonardo confirma por WhatsApp).
@@ -323,19 +329,18 @@ export default function CotizadorPage() {
                   desc={
                     s.modo === "aereo"
                       ? `Hasta ${c.maxPesoAereoLb} lb · ${c.ft3} ft³`
-                      : `${c.ft3} ft³ · peso volumen ${c.pesoVolumenLb} lb`
+                      : `${c.ft3} ft³ · hasta ${c.maxPesoAereoLb} lb`
                   }
                 />
               ))}
             </div>
 
-            {s.modo === "aereo" && s.caja && (
+            {s.caja && (
               <div className="field" style={{ marginTop: "1rem" }}>
                 <label>Peso del paquete (libras)</label>
                 <input
                   type="number"
                   min={1}
-                  max={CAJAS[s.caja as Caja].maxPesoAereoLb}
                   step="0.1"
                   placeholder={`Máximo ${CAJAS[s.caja as Caja].maxPesoAereoLb} lb`}
                   value={s.pesoLb === "" ? "" : s.pesoLb}
@@ -344,9 +349,17 @@ export default function CotizadorPage() {
                     update("pesoLb", v === "" ? "" : Number(v));
                   }}
                 />
-                <div className="hint">
-                  Cobramos el mayor entre peso real y peso volumen ({CAJAS[s.caja as Caja].pesoVolumenLb} lb).
-                </div>
+                {s.modo === "aereo" && !pesoExcedido && (
+                  <div className="hint">
+                    Cobramos el mayor entre peso real y peso volumen ({CAJAS[s.caja as Caja].pesoVolumenLb} lb).
+                  </div>
+                )}
+                {pesoExcedido && (
+                  <div className="peso-error">
+                    ⚠ El peso máximo permitido para esta caja es {CAJAS[s.caja as Caja].maxPesoAereoLb} lb.
+                    Para más peso, te recomendamos enviar dos cajas en lugar de una.
+                  </div>
+                )}
               </div>
             )}
 
@@ -422,7 +435,7 @@ export default function CotizadorPage() {
                 <div className="cart-item-meta">
                   {it.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}
                   {" · "}
-                  <IconBox /> {it.caja}
+                  <IconBox /> {CAJAS[it.caja].dim}
                   {it.modo === "aereo" && ` · ${it.pesoLb} lb`}
                 </div>
                 <div className="cart-item-price">${it.total.toFixed(2)}</div>
@@ -540,7 +553,7 @@ export default function CotizadorPage() {
                   <div className="cart-item-meta">
                     {it.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}
                     {" · "}
-                    <IconBox /> {it.caja}
+                    <IconBox /> {CAJAS[it.caja].dim}
                     {it.modo === "aereo" && ` · ${it.pesoLb} lb`}
                   </div>
                 </div>

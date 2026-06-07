@@ -28,7 +28,7 @@
   padding: 1.2rem 0;
   margin-bottom: 2.5rem;
 }
-.cot-header .brand img { height: 48px; width: auto; display: block; }
+.cot-header .brand img { height: 62px; width: auto; display: block; image-rendering: -webkit-optimize-contrast; }
 .cot-header .back-link {
   font-size: 0.88rem;
   color: var(--ink-soft);
@@ -679,4 +679,17 @@
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--ink);
+}
+
+/* Aviso vermelho quando peso > limite da caja */
+.peso-error {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  background: rgba(255, 60, 60, 0.08);
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  border-radius: 8px;
+  color: #C82424;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.45;
 }

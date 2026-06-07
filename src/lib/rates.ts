@@ -9,15 +9,18 @@ export type Modo = "maritimo" | "aereo";
 
 export type BoxSpec = {
   label: string;
+  /** Dimensões físicas externas em polegadas (LxWxH) */
+  dim: string;
   ft3: number;
   pesoVolumenLb: number;
+  /** Peso máximo permitido por caja, aplicado em qualquer modo (aéreo ou marítimo). */
   maxPesoAereoLb: number;
 };
 
 export const CAJAS: Record<Caja, BoxSpec> = {
-  Small: { label: "Small", ft3: 1.19, pesoVolumenLb: 12.39, maxPesoAereoLb: 30 },
-  Medium: { label: "Medium", ft3: 2.92, pesoVolumenLb: 30.36, maxPesoAereoLb: 50 },
-  Large: { label: "Large", ft3: 3.75, pesoVolumenLb: 39.04, maxPesoAereoLb: 50 },
+  Small: { label: "17 × 11 × 11 pol", dim: "17×11×11 pol", ft3: 1.19, pesoVolumenLb: 12.39, maxPesoAereoLb: 40 },
+  Medium: { label: "21 × 16 × 15 pol", dim: "21×16×15 pol", ft3: 2.92, pesoVolumenLb: 30.36, maxPesoAereoLb: 50 },
+  Large: { label: "27 × 16 × 15 pol", dim: "27×16×15 pol", ft3: 3.75, pesoVolumenLb: 39.04, maxPesoAereoLb: 50 },
 };
 
 export type EstadoRate = {

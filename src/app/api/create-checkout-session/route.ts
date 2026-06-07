@@ -80,14 +80,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: `Caja ${i + 1}: tamaño inválido.` }, { status: 400 });
       }
       const pesoLbNum = typeof it.pesoLb === "number" ? it.pesoLb : 0;
-      if (it.modo === "aereo") {
-        const maxPeso = CAJAS[it.caja].maxPesoAereoLb;
-        if (pesoLbNum < 0 || pesoLbNum > maxPeso) {
-          return NextResponse.json(
-            { error: `Caja ${i + 1}: peso fuera del rango (0–${maxPeso} lb).` },
-            { status: 400 }
-          );
-        }
+      // Peso é obrigatório e respeitar o limite — válido para aéreo e marítimo.
+      const maxPeso = CAJAS[it.caja].maxPesoAereoLb;
+      if (pesoLbNum <= 0 || pesoLbNum > maxPeso) {
+        return NextResponse.json(
+          { error: `Caja ${i + 1}: peso fuera del rango (1–${maxPeso} lb).` },
+          { status: 400 }
+        );
       }
       const cot = cotizar({
         estadoKey: envio.estadoUsaKey,
@@ -150,8 +149,8 @@ export async function POST(req: Request) {
           currency: "usd",
           unit_amount: Math.round(r.total * 100),
           product_data: {
-            name: `Caja ${idx + 1} · ${r.modo === "maritimo" ? "Marítimo" : "Aéreo"} · ${r.caja}`,
-            description: `Envío ${str(envio.origen, 80)} → ${str(envio.destino, 80)}${r.pesoLb ? ` · ${r.pesoLb} lb` : ""} · Seguro $500 incluido`,
+            name: `Caja ${idx + 1} · ${r.modo === "maritimo" ? "Marítimo" : "Aéreo"} · ${CAJAS[r.caja].dim}`,
+            description: `Envío ${str(envio.origen, 80)} → ${str(envio.destino, 80)} · ${r.pesoLb} lb · Seguro $500 incluido`,
           },
         },
       })),
