@@ -9,10 +9,14 @@ type Payload = {
     estadoUsaKey: string;
     origen: string;
     destino: string;
+  };
+  // Carrinho: uma ou mais caixas. Cada item tem modo+caja+peso próprios
+  // e vira um line_item separado no Stripe Checkout.
+  items: Array<{
     modo: string;
     caja: string;
     pesoLb?: number | "";
-  };
+  }>;
   // Cliente é opcional na CRIAÇÃO (step 3 do cotizador mostra o Stripe
   // antes de preencher dados de destinatário). Os campos vão sendo
   // atualizados via /api/update-checkout-metadata conforme o user digita.
@@ -45,43 +49,65 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as Payload;
     const envio = body?.envio;
+    const items = body?.items;
     const cliente = body?.cliente ?? {};
 
     if (!envio) {
       return NextResponse.json({ error: "Datos de envío incompletos." }, { status: 400 });
     }
-    if (!isModo(envio.modo)) {
-      return NextResponse.json({ error: "Modo de envío inválido." }, { status: 400 });
-    }
-    if (!isCaja(envio.caja)) {
-      return NextResponse.json({ error: "Caja inválida." }, { status: 400 });
-    }
     if (!envio.estadoUsaKey || !ESTADOS_USA[envio.estadoUsaKey]) {
       return NextResponse.json({ error: "Estado de origen inválido." }, { status: 400 });
     }
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: "Carrito vacío." }, { status: 400 });
+    }
 
-    const pesoLbNum = typeof envio.pesoLb === "number" ? envio.pesoLb : 0;
-    if (envio.modo === "aereo") {
-      const maxPeso = CAJAS[envio.caja].maxPesoAereoLb;
-      if (pesoLbNum < 0 || pesoLbNum > maxPeso) {
-        return NextResponse.json(
-          { error: `Peso fuera del rango permitido (0–${maxPeso} lb).` },
-          { status: 400 }
-        );
+    // Valida cada item e recalcula o valor server-side (fonte única de verdade).
+    type ResolvedItem = {
+      modo: Modo;
+      caja: Caja;
+      pesoLb: number;
+      total: number;
+      detalle: string;
+    };
+    const resolved: ResolvedItem[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (!isModo(it.modo)) {
+        return NextResponse.json({ error: `Caja ${i + 1}: modo inválido.` }, { status: 400 });
       }
+      if (!isCaja(it.caja)) {
+        return NextResponse.json({ error: `Caja ${i + 1}: tamaño inválido.` }, { status: 400 });
+      }
+      const pesoLbNum = typeof it.pesoLb === "number" ? it.pesoLb : 0;
+      if (it.modo === "aereo") {
+        const maxPeso = CAJAS[it.caja].maxPesoAereoLb;
+        if (pesoLbNum < 0 || pesoLbNum > maxPeso) {
+          return NextResponse.json(
+            { error: `Caja ${i + 1}: peso fuera del rango (0–${maxPeso} lb).` },
+            { status: 400 }
+          );
+        }
+      }
+      const cot = cotizar({
+        estadoKey: envio.estadoUsaKey,
+        caja: it.caja,
+        modo: it.modo,
+        pesoLb: pesoLbNum,
+      });
+      if (!cot.total || cot.total <= 0) {
+        return NextResponse.json({ error: `Caja ${i + 1}: total inválido.` }, { status: 400 });
+      }
+      resolved.push({
+        modo: it.modo,
+        caja: it.caja,
+        pesoLb: pesoLbNum,
+        total: cot.total,
+        detalle: cot.detalle,
+      });
     }
 
-    // ⚠️ FONTE ÚNICA DE VERDADE: o servidor recalcula. Cliente não envia preço.
-    const cot = cotizar({
-      estadoKey: envio.estadoUsaKey,
-      caja: envio.caja,
-      modo: envio.modo,
-      pesoLb: pesoLbNum,
-    });
-
-    if (!cot.total || cot.total <= 0) {
-      return NextResponse.json({ error: "Total calculado inválido." }, { status: 400 });
-    }
+    const totalGeral = resolved.reduce((acc, r) => acc + r.total, 0);
 
     const key = process.env.STRIPE_SECRET_KEY;
     if (!key) {
@@ -93,7 +119,6 @@ export async function POST(req: Request) {
 
     const stripe = new Stripe(key);
     const origin = req.headers.get("origin") ?? "https://miacompra.vercel.app";
-    const amountCents = Math.round(cot.total * 100);
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -119,27 +144,28 @@ export async function POST(req: Request) {
       // customer_email só vai se já foi preenchido. Caso contrário, Stripe
       // coleta o email dentro do embed (campo "Contact information").
       ...(isEmail(cliente.email) ? { customer_email: cliente.email } : {}),
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: amountCents,
-            product_data: {
-              name: `Envío ${str(envio.origen, 120)} → ${str(envio.destino, 120)}`,
-              description: `${envio.modo === "maritimo" ? "Marítimo" : "Aéreo"} · Caja ${envio.caja}${pesoLbNum ? ` · ${pesoLbNum} lb` : ""} · Seguro $500 incluido`,
-            },
+      line_items: resolved.map((r, idx) => ({
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: Math.round(r.total * 100),
+          product_data: {
+            name: `Caja ${idx + 1} · ${r.modo === "maritimo" ? "Marítimo" : "Aéreo"} · ${r.caja}`,
+            description: `Envío ${str(envio.origen, 80)} → ${str(envio.destino, 80)}${r.pesoLb ? ` · ${r.pesoLb} lb` : ""} · Seguro $500 incluido`,
           },
         },
-      ],
+      })),
       metadata: {
         estado_usa_key: envio.estadoUsaKey,
         origen: str(envio.origen, 200),
         destino: str(envio.destino, 200),
-        modo: envio.modo,
-        caja: envio.caja,
-        peso_lb: String(pesoLbNum || ""),
-        detalle: str(cot.detalle, 200),
+        // Resumo do carrinho (até 500 chars no metadata por chave do Stripe).
+        cart_items: str(
+          resolved.map((r, i) => `${i + 1}:${r.modo}/${r.caja}${r.pesoLb ? `/${r.pesoLb}lb` : ""}/$${r.total.toFixed(2)}`).join(" | "),
+          480
+        ),
+        cart_total_usd: totalGeral.toFixed(2),
+        cart_count: String(resolved.length),
         cliente_nombre: str(cliente.nombre, 200),
         cliente_direccion: str(cliente.direccion, 200),
         cliente_poblacion: str(cliente.poblacion, 100),

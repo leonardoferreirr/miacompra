@@ -10,7 +10,7 @@ import {
 import "./cotizador.css";
 import { CAJAS, cotizar, ESTADOS_LIST, ESTADOS_USA, type Caja, type Modo } from "@/lib/rates";
 import { ESTADOS_VE_LIST } from "@/lib/venezuela";
-import { INITIAL_STATE, type CotizacionState } from "@/lib/types";
+import { INITIAL_STATE, type CartItem, type CotizacionState } from "@/lib/types";
 
 // Stripe.js carrega uma vez, fora do componente, e fica em cache.
 const stripePromise = loadStripe(
@@ -29,6 +29,7 @@ export default function CotizadorPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [carrito, setCarrito] = useState<CartItem[]>([]);
 
   // Persistência local: restaura form se cliente recarregar a página ou
   // voltar depois. localStorage > cookie/IP — funciona offline, sem backend,
@@ -42,6 +43,7 @@ export default function CotizadorPage() {
         if (saved?.s) setS({ ...INITIAL_STATE, ...saved.s });
         if (saved?.step && [1, 2, 3].includes(saved.step)) setStep(saved.step);
         if (typeof saved?.acceptedTerms === "boolean") setAcceptedTerms(saved.acceptedTerms);
+        if (Array.isArray(saved?.carrito)) setCarrito(saved.carrito);
       }
     } catch {}
     setHydrated(true);
@@ -50,9 +52,9 @@ export default function CotizadorPage() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ s, step, acceptedTerms }));
+      localStorage.setItem(LS_KEY, JSON.stringify({ s, step, acceptedTerms, carrito }));
     } catch {}
-  }, [s, step, acceptedTerms, hydrated]);
+  }, [s, step, acceptedTerms, carrito, hydrated]);
 
   function update<K extends keyof CotizacionState>(k: K, v: CotizacionState[K]) {
     setS((prev) => ({ ...prev, [k]: v }));
@@ -90,15 +92,43 @@ export default function CotizadorPage() {
   // preencher os dados do destinatário (Leonardo confirma por WhatsApp).
   const step3Ok = !!(s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
 
+  // Total do carrinho (soma das caixas adicionadas).
+  const totalCarrito = useMemo(
+    () => carrito.reduce((acc, it) => acc + it.total, 0),
+    [carrito]
+  );
+
+  function addToCart() {
+    if (!cotizacion || !s.modo || !s.caja) return;
+    const item: CartItem = {
+      id: `c-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      modo: s.modo as Modo,
+      caja: s.caja as Caja,
+      pesoLb: typeof s.pesoLb === "number" ? s.pesoLb : 0,
+      total: cotizacion.total,
+      detalle: cotizacion.detalle,
+    };
+    setCarrito((prev) => [...prev, item]);
+    // Reseta o form de caixa pra incentivar adicionar outra distinta.
+    update("caja", "");
+    update("pesoLb", "");
+  }
+
+  function removeFromCart(id: string) {
+    setCarrito((prev) => prev.filter((x) => x.id !== id));
+  }
+
   // 1) Cria a session do Stripe assim que o cliente entra no step 3 com
-  // cotização válida. Regenera SOMENTE se o valor mudar (caja/peso/modo/
-  // estado). Email e dados do destinatário entram via update separado.
+  // carrinho não vazio. Regenera SOMENTE se o carrinho mudar (itens
+  // adicionados/removidos). Email e dados do destinatário entram via
+  // update separado.
   const valueFingerprintRef = useRef<string>("");
   useEffect(() => {
-    if (step !== 3 || !cotizacion) return;
+    if (step !== 3 || carrito.length === 0) return;
     const fp = JSON.stringify({
       e: s.estadoUsaKey, cu: s.ciudadUsa, ev: s.estadoVeKey, cv: s.ciudadVe,
-      m: s.modo, c: s.caja, p: s.pesoLb, t: cotizacion.total,
+      items: carrito.map((i) => ({ m: i.modo, c: i.caja, p: i.pesoLb })),
+      t: totalCarrito,
     });
     if (fp === valueFingerprintRef.current && clientSecret) return;
     const t = setTimeout(() => {
@@ -109,7 +139,7 @@ export default function CotizadorPage() {
     }, 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, cotizacion?.total, s.estadoUsaKey, s.ciudadUsa, s.estadoVeKey, s.ciudadVe, s.modo, s.caja, s.pesoLb]);
+  }, [step, totalCarrito, carrito.length, s.estadoUsaKey, s.ciudadUsa, s.estadoVeKey, s.ciudadVe]);
 
   // 2) Sincroniza metadata da session com os campos do destinatário
   // conforme o cliente preenche. Debounce 800ms — não regenera session,
@@ -139,7 +169,7 @@ export default function CotizadorPage() {
   }, [sessionId, s.email, s.nombre, s.apellidos, s.direccion, s.apartamento, s.poblacion, s.provincia, s.cp, s.whatsapp, s.notas]);
 
   async function handleCheckout() {
-    if (!cotizacion) return;
+    if (carrito.length === 0) return;
     setSubmitting(true);
     setErr(null);
     try {
@@ -151,10 +181,12 @@ export default function CotizadorPage() {
             estadoUsaKey: s.estadoUsaKey,
             origen: `${s.ciudadUsa}, ${estadoUsa?.nombre}`,
             destino: `${s.ciudadVe}, ${s.estadoVeKey}`,
-            modo: s.modo,
-            caja: s.caja,
-            pesoLb: s.pesoLb,
           },
+          items: carrito.map((it) => ({
+            modo: it.modo,
+            caja: it.caja,
+            pesoLb: it.pesoLb,
+          })),
           cliente: {
             email: s.email,
             nombre: `${s.nombre} ${s.apellidos}`,
@@ -254,9 +286,10 @@ export default function CotizadorPage() {
         )}
 
         {step === 2 && (
+          <div className="cot-grid-3">
           <div className="cot-card">
             <h2>¿Cómo es tu paquete?</h2>
-            <p className="sub">Elige el tipo de envío y el tamaño de la caja.</p>
+            <p className="sub">Elige el tipo de envío y el tamaño de la caja. Puedes añadir varias cajas si quieres mandar más de una.</p>
 
             <span className="field-label-top">Tipo de envío</span>
             <div className="radio-grid">
@@ -319,12 +352,23 @@ export default function CotizadorPage() {
 
             {cotizacion && step2Ok && (
               <div className="resumen">
-                <div className="label">Precio cerrado del envío</div>
+                <div className="label">Precio de esta caja</div>
                 <div className="total">${cotizacion.total.toFixed(2)} <small>USD</small></div>
                 <div className="detalle">{cotizacion.detalle}</div>
                 <span className="badge"><IconCheck /> Seguro de $500 incluido · impuestos de aduana incluidos</span>
               </div>
             )}
+
+            <div className="cot-actions" style={{ marginTop: "1rem" }}>
+              <button
+                className="btn-add-cart"
+                disabled={!step2Ok}
+                onClick={addToCart}
+                type="button"
+              >
+                + Añadir al carrito
+              </button>
+            </div>
 
             <label className="cot-terms">
               <input
@@ -343,18 +387,68 @@ export default function CotizadorPage() {
 
             <div className="cot-actions">
               <button className="btn-prev" onClick={() => setStep(1)}>← Atrás</button>
-              <button className="btn-next" disabled={!step2Ok || !acceptedTerms} onClick={() => setStep(3)}>
-                Continuar al pago
+              <button
+                className="btn-next"
+                disabled={carrito.length === 0 || !acceptedTerms}
+                onClick={() => setStep(3)}
+              >
+                {carrito.length === 0
+                  ? "Añade una caja al carrito"
+                  : `Continuar al pago · $${totalCarrito.toFixed(2)} USD`}
                 <Arrow />
               </button>
             </div>
           </div>
+
+          {/* Preview do carrinho */}
+          <aside className="tu-pedido cart-preview">
+            <h3>Tu carrito</h3>
+            {carrito.length === 0 && (
+              <p className="cart-empty">Aún no has añadido ninguna caja. Configura una caja a la izquierda y pulsa "Añadir al carrito".</p>
+            )}
+            {carrito.map((it, idx) => (
+              <div className="cart-item" key={it.id}>
+                <div className="cart-item-head">
+                  <span className="cart-item-n">Caja {idx + 1}</span>
+                  <button
+                    type="button"
+                    className="cart-item-remove"
+                    aria-label="Eliminar"
+                    onClick={() => removeFromCart(it.id)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="cart-item-meta">
+                  {it.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}
+                  {" · "}
+                  <IconBox /> {it.caja}
+                  {it.modo === "aereo" && ` · ${it.pesoLb} lb`}
+                </div>
+                <div className="cart-item-price">${it.total.toFixed(2)}</div>
+              </div>
+            ))}
+            {carrito.length > 0 && (
+              <div className="cart-total">
+                <span>Total</span>
+                <span>${totalCarrito.toFixed(2)}</span>
+              </div>
+            )}
+            {carrito.length > 0 && (
+              <div className="badges">
+                <span className="b"><IconCheck /> Seguro de $500 por caja</span>
+                <span className="b"><IconCheck /> Impuestos de aduana incluidos</span>
+                <span className="b"><IconCheck /> Entrega puerta a puerta</span>
+              </div>
+            )}
+          </aside>
+          </div>
         )}
 
-        {step === 3 && cotizacion && (
+        {step === 3 && carrito.length > 0 && (
           <div className="cot-grid-3">
             <div className="cot-card">
-              <h2>Paga ${cotizacion.total.toFixed(2)} USD</h2>
+              <h2>Paga ${totalCarrito.toFixed(2)} USD</h2>
               <p className="sub">Pago 100% seguro vía Stripe. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
 
               <div className="cot-pay-area cot-pay-area--top">
@@ -436,14 +530,24 @@ export default function CotizadorPage() {
               <h3>Tu pedido</h3>
               <div className="row"><span className="k">Origen</span><span className="v">{s.ciudadUsa}, {estadoUsa?.nombre}</span></div>
               <div className="row"><span className="k">Destino</span><span className="v">{s.ciudadVe}, {s.estadoVeKey}</span></div>
-              <div className="row"><span className="k">Tipo de envío</span><span className="v">{s.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}</span></div>
-              <div className="row"><span className="k">Tamaño de la caja</span><span className="v"><IconBox /> {s.caja}</span></div>
-              {s.modo === "aereo" && (
-                <div className="row"><span className="k">Peso</span><span className="v">{s.pesoLb} lb</span></div>
-              )}
-              <div className="row total-row"><span className="k">Total</span><span className="v">${cotizacion.total.toFixed(2)}</span></div>
+              <div className="cart-divider" />
+              {carrito.map((it, idx) => (
+                <div className="cart-item cart-item--mini" key={it.id}>
+                  <div className="cart-item-head">
+                    <span className="cart-item-n">Caja {idx + 1}</span>
+                    <span className="cart-item-price-mini">${it.total.toFixed(2)}</span>
+                  </div>
+                  <div className="cart-item-meta">
+                    {it.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}
+                    {" · "}
+                    <IconBox /> {it.caja}
+                    {it.modo === "aereo" && ` · ${it.pesoLb} lb`}
+                  </div>
+                </div>
+              ))}
+              <div className="row total-row"><span className="k">Total</span><span className="v">${totalCarrito.toFixed(2)}</span></div>
               <div className="badges">
-                <span className="b"><IconCheck /> Seguro de $500 incluido</span>
+                <span className="b"><IconCheck /> Seguro de $500 por caja</span>
                 <span className="b"><IconCheck /> Impuestos de aduana incluidos</span>
                 <span className="b"><IconCheck /> Entrega puerta a puerta</span>
               </div>

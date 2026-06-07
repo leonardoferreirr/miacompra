@@ -1,5 +1,14 @@
 import type { Caja, Modo } from "./rates";
 
+export type CartItem = {
+  id: string;
+  modo: Modo;
+  caja: Caja;
+  pesoLb: number;
+  total: number;
+  detalle: string;
+};
+
 export type CotizacionState = {
   // step 1
   estadoUsaKey: string | "";
