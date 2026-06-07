@@ -97,9 +97,17 @@ export async function POST(req: Request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      // Sem `payment_method_types` → Stripe libera automaticamente todos os
-      // métodos habilitados na conta (cartão, Apple Pay, Google Pay, Amazon
-      // Pay, Link, Klarna, Cash App, etc.) conforme o navegador suportar.
+      // Listamos explicitamente os métodos. Apple Pay e Google Pay são
+      // wrappers do "card" — aparecem automaticamente em Safari (Apple Pay)
+      // ou Chrome com Google Pay configurado. Os demais (Amazon Pay, Klarna,
+      // Cash App) precisam ser declarados aqui — sem isso, o Stripe omitia
+      // do fluxo mesmo com a conta ativa pra eles.
+      payment_method_types: [
+        "card",
+        "link",
+        "amazon_pay",
+        "klarna",
+      ],
       customer_email: cliente.email,
       line_items: [
         {
