@@ -464,3 +464,20 @@
   min-height: 320px;
 }
 .cot-stripe-wrap > div { width: 100%; }
+
+/* Área de pagamento inline no step 3 */
+.cot-pay-area {
+  margin-top: 0.6rem;
+  min-height: 220px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--line-light);
+  padding: 1.2rem;
+}
+.cot-pay-hint {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 2.4rem 1rem;
+  font-style: italic;
+}

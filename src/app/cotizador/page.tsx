@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckoutProvider,
@@ -59,6 +59,29 @@ export default function CotizadorPage() {
     return true;
   }, [s.modo, s.caja, s.pesoLb]);
   const step3Ok = !!(s.email && s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
+
+  // Auto-load do Stripe Embedded: cria a session assim que step 3 estiver
+  // preenchido e o user estiver no step 3. Debounce de 700ms pra esperar
+  // o user terminar de digitar antes de chamar a API.
+  const lastFingerprintRef = useRef<string>("");
+  useEffect(() => {
+    if (step !== 3 || !step3Ok || !cotizacion) return;
+    // Fingerprint = todos os campos que entram no payload. Se mudar, regera.
+    const fp = JSON.stringify({
+      e: s.estadoUsaKey, cu: s.ciudadUsa, ev: s.estadoVeKey, cv: s.ciudadVe,
+      m: s.modo, c: s.caja, p: s.pesoLb,
+      em: s.email, n: s.nombre, ap: s.apellidos, d: s.direccion, apt: s.apartamento,
+      po: s.poblacion, pr: s.provincia, cp: s.cp, wa: s.whatsapp,
+    });
+    if (fp === lastFingerprintRef.current && clientSecret) return;
+    const t = setTimeout(() => {
+      lastFingerprintRef.current = fp;
+      setClientSecret(null);
+      handleCheckout();
+    }, 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, step3Ok, cotizacion?.total, s.email, s.nombre, s.apellidos, s.direccion, s.apartamento, s.poblacion, s.provincia, s.cp, s.whatsapp]);
 
   async function handleCheckout() {
     if (!cotizacion) return;
@@ -257,47 +280,7 @@ export default function CotizadorPage() {
           </div>
         )}
 
-        {step === 3 && cotizacion && clientSecret && (
-          <div className="cot-grid-3">
-            <div className="cot-card cot-card--checkout">
-              <h2>Pago seguro</h2>
-              <p className="sub">Completa el pago abajo. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
-              <div className="cot-stripe-wrap">
-                <EmbeddedCheckoutProvider
-                  stripe={stripePromise}
-                  options={{ clientSecret }}
-                >
-                  <EmbeddedCheckout />
-                </EmbeddedCheckoutProvider>
-              </div>
-              <button
-                className="btn-prev"
-                style={{ marginTop: "1.4rem" }}
-                onClick={() => { setClientSecret(null); setErr(null); }}
-              >
-                ← Editar datos
-              </button>
-            </div>
-            <aside className="tu-pedido">
-              <h3>Tu pedido</h3>
-              <div className="row"><span className="k">Origen</span><span className="v">{s.ciudadUsa}, {estadoUsa?.nombre}</span></div>
-              <div className="row"><span className="k">Destino</span><span className="v">{s.ciudadVe}, {s.estadoVeKey}</span></div>
-              <div className="row"><span className="k">Tipo de envío</span><span className="v">{s.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}</span></div>
-              <div className="row"><span className="k">Tamaño de la caja</span><span className="v"><IconBox /> {s.caja}</span></div>
-              {s.modo === "aereo" && (
-                <div className="row"><span className="k">Peso</span><span className="v">{s.pesoLb} lb</span></div>
-              )}
-              <div className="row total-row"><span className="k">Total</span><span className="v">${cotizacion.total.toFixed(2)}</span></div>
-              <div className="badges">
-                <span className="b"><IconCheck /> Seguro de $500 incluido</span>
-                <span className="b"><IconCheck /> Impuestos de aduana incluidos</span>
-                <span className="b"><IconCheck /> Entrega puerta a puerta</span>
-              </div>
-            </aside>
-          </div>
-        )}
-
-        {step === 3 && cotizacion && !clientSecret && (
+        {step === 3 && cotizacion && (
           <div className="cot-grid-3">
             <div className="cot-card">
               <h2>Detalles del envío</h2>
@@ -359,12 +342,28 @@ export default function CotizadorPage() {
                 </div>
               )}
 
-              <div className="cot-actions">
+              <SectionTitle>Pago · ${cotizacion.total.toFixed(2)} USD</SectionTitle>
+              <div className="cot-pay-area">
+                {!step3Ok && (
+                  <div className="cot-pay-hint">
+                    Termina de rellenar tus datos arriba para ver las opciones de pago.
+                  </div>
+                )}
+                {step3Ok && submitting && !clientSecret && (
+                  <div className="cot-pay-hint">Cargando opciones de pago…</div>
+                )}
+                {step3Ok && clientSecret && (
+                  <EmbeddedCheckoutProvider
+                    stripe={stripePromise}
+                    options={{ clientSecret }}
+                  >
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                )}
+              </div>
+
+              <div className="cot-actions" style={{ justifyContent: "flex-start" }}>
                 <button className="btn-prev" onClick={() => setStep(2)}>← Atrás</button>
-                <button className="btn-next" disabled={!step3Ok || submitting} onClick={handleCheckout}>
-                  {submitting ? "Procesando…" : `Continuar al pago · $${cotizacion.total.toFixed(2)} USD`}
-                  {!submitting && <Arrow />}
-                </button>
               </div>
             </div>
 
