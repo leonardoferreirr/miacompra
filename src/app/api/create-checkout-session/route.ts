@@ -97,11 +97,15 @@ export async function POST(req: Request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      // EMBEDDED checkout: o Stripe injeta o componente no site (step 3 do
+      // cotizador). Apple Pay precisa do domínio verificado em Settings
+      // → Payment method domains pra aparecer no embed (no hosted era auto).
+      ui_mode: "embedded",
       // Listamos explicitamente os métodos. Apple Pay e Google Pay são
       // wrappers do "card" — aparecem automaticamente em Safari (Apple Pay)
-      // ou Chrome com Google Pay configurado. Os demais (Amazon Pay, Klarna,
-      // Cash App) precisam ser declarados aqui — sem isso, o Stripe omitia
-      // do fluxo mesmo com a conta ativa pra eles.
+      // ou Chrome com Google Pay configurado. Os demais (Amazon Pay, Klarna)
+      // precisam ser declarados aqui — sem isso, o Stripe omitia mesmo
+      // com a conta ativa pra eles.
       payment_method_types: [
         "card",
         "link",
@@ -142,11 +146,12 @@ export async function POST(req: Request) {
         cliente_whatsapp: str(cliente.whatsapp, 40),
         cliente_notas: str(cliente.notas ?? "", 480),
       },
-      success_url: `${origin}/cotizador/gracias?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/cotizador`,
+      // Em embedded mode usa-se return_url (pra onde o cliente vai DEPOIS
+      // de pagar) em vez de success_url/cancel_url.
+      return_url: `${origin}/cotizador/gracias?session_id={CHECKOUT_SESSION_ID}`,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ clientSecret: session.client_secret });
   } catch (e: any) {
     console.error("[create-checkout-session]", e?.message ?? e);
     return NextResponse.json(

@@ -2,10 +2,20 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout,
+} from "@stripe/react-stripe-js";
 import "./cotizador.css";
 import { CAJAS, cotizar, ESTADOS_LIST, ESTADOS_USA, type Caja, type Modo } from "@/lib/rates";
 import { ESTADOS_VE_LIST } from "@/lib/venezuela";
 import { INITIAL_STATE, type CotizacionState } from "@/lib/types";
+
+// Stripe.js carrega uma vez, fora do componente, e fica em cache.
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+);
 
 const WA_NUMBER = "17865502727"; // +1 786 550-2727 — Mia Compra suporte
 const WA_MSG = "Hola Mia Compra, tengo una duda sobre mi cotización.";
@@ -15,6 +25,7 @@ export default function CotizadorPage() {
   const [s, setS] = useState<CotizacionState>(INITIAL_STATE);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   function update<K extends keyof CotizacionState>(k: K, v: CotizacionState[K]) {
     setS((prev) => ({ ...prev, [k]: v }));
@@ -79,8 +90,8 @@ export default function CotizadorPage() {
         }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
       } else {
         setErr(data.error || "No fue posible iniciar el pago.");
       }
@@ -246,7 +257,47 @@ export default function CotizadorPage() {
           </div>
         )}
 
-        {step === 3 && cotizacion && (
+        {step === 3 && cotizacion && clientSecret && (
+          <div className="cot-grid-3">
+            <div className="cot-card cot-card--checkout">
+              <h2>Pago seguro</h2>
+              <p className="sub">Completa el pago abajo. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
+              <div className="cot-stripe-wrap">
+                <EmbeddedCheckoutProvider
+                  stripe={stripePromise}
+                  options={{ clientSecret }}
+                >
+                  <EmbeddedCheckout />
+                </EmbeddedCheckoutProvider>
+              </div>
+              <button
+                className="btn-prev"
+                style={{ marginTop: "1.4rem" }}
+                onClick={() => { setClientSecret(null); setErr(null); }}
+              >
+                ← Editar datos
+              </button>
+            </div>
+            <aside className="tu-pedido">
+              <h3>Tu pedido</h3>
+              <div className="row"><span className="k">Origen</span><span className="v">{s.ciudadUsa}, {estadoUsa?.nombre}</span></div>
+              <div className="row"><span className="k">Destino</span><span className="v">{s.ciudadVe}, {s.estadoVeKey}</span></div>
+              <div className="row"><span className="k">Tipo de envío</span><span className="v">{s.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}</span></div>
+              <div className="row"><span className="k">Tamaño de la caja</span><span className="v"><IconBox /> {s.caja}</span></div>
+              {s.modo === "aereo" && (
+                <div className="row"><span className="k">Peso</span><span className="v">{s.pesoLb} lb</span></div>
+              )}
+              <div className="row total-row"><span className="k">Total</span><span className="v">${cotizacion.total.toFixed(2)}</span></div>
+              <div className="badges">
+                <span className="b"><IconCheck /> Seguro de $500 incluido</span>
+                <span className="b"><IconCheck /> Impuestos de aduana incluidos</span>
+                <span className="b"><IconCheck /> Entrega puerta a puerta</span>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {step === 3 && cotizacion && !clientSecret && (
           <div className="cot-grid-3">
             <div className="cot-card">
               <h2>Detalles del envío</h2>
@@ -311,7 +362,7 @@ export default function CotizadorPage() {
               <div className="cot-actions">
                 <button className="btn-prev" onClick={() => setStep(2)}>← Atrás</button>
                 <button className="btn-next" disabled={!step3Ok || submitting} onClick={handleCheckout}>
-                  {submitting ? "Procesando…" : `Pagar $${cotizacion.total.toFixed(2)} USD`}
+                  {submitting ? "Procesando…" : `Continuar al pago · $${cotizacion.total.toFixed(2)} USD`}
                   {!submitting && <Arrow />}
                 </button>
               </div>

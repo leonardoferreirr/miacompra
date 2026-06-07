@@ -453,3 +453,14 @@
   .wa-bubble .lbl { display: none; }
   .wa-bubble { padding: 0.95rem; }
 }
+
+/* Stripe Embedded Checkout — fica num card claro com bom contraste */
+.cot-card--checkout { background: #fff; }
+.cot-card--checkout h2,
+.cot-card--checkout .sub { color: var(--ink); }
+.cot-card--checkout .sub { opacity: 0.7; }
+.cot-stripe-wrap {
+  margin-top: 1.4rem;
+  min-height: 320px;
+}
+.cot-stripe-wrap > div { width: 100%; }
