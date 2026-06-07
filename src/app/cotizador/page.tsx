@@ -28,6 +28,7 @@ export default function CotizadorPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Persistência local: restaura form se cliente recarregar a página ou
   // voltar depois. localStorage > cookie/IP — funciona offline, sem backend,
@@ -40,6 +41,7 @@ export default function CotizadorPage() {
         const saved = JSON.parse(raw);
         if (saved?.s) setS({ ...INITIAL_STATE, ...saved.s });
         if (saved?.step && [1, 2, 3].includes(saved.step)) setStep(saved.step);
+        if (typeof saved?.acceptedTerms === "boolean") setAcceptedTerms(saved.acceptedTerms);
       }
     } catch {}
     setHydrated(true);
@@ -48,9 +50,9 @@ export default function CotizadorPage() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ s, step }));
+      localStorage.setItem(LS_KEY, JSON.stringify({ s, step, acceptedTerms }));
     } catch {}
-  }, [s, step, hydrated]);
+  }, [s, step, acceptedTerms, hydrated]);
 
   function update<K extends keyof CotizacionState>(k: K, v: CotizacionState[K]) {
     setS((prev) => ({ ...prev, [k]: v }));
@@ -340,7 +342,7 @@ export default function CotizadorPage() {
               <h2>Paga ${cotizacion.total.toFixed(2)} USD</h2>
               <p className="sub">Pago 100% seguro vía Stripe. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
 
-              <div className="cot-pay-area cot-pay-area--top">
+              <div className={`cot-pay-area cot-pay-area--top${acceptedTerms ? "" : " cot-pay-area--locked"}`}>
                 {submitting && !clientSecret && (
                   <div className="cot-pay-hint">Cargando opciones de pago…</div>
                 )}
@@ -354,6 +356,14 @@ export default function CotizadorPage() {
                   >
                     <EmbeddedCheckout />
                   </EmbeddedCheckoutProvider>
+                )}
+                {!acceptedTerms && (
+                  <div className="cot-pay-overlay">
+                    <div className="cot-pay-overlay-card">
+                      <div className="cot-pay-overlay-title">Acepta los términos para pagar</div>
+                      <div className="cot-pay-overlay-sub">Marca la casilla al final del formulario para habilitar el pago.</div>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -409,6 +419,21 @@ export default function CotizadorPage() {
                 <label>Notas del pedido (opcional)</label>
                 <textarea value={s.notas} onChange={(e) => update("notas", e.target.value)} placeholder="Notas para la entrega o el contenido de la caja…" />
               </div>
+
+              <label className="cot-terms">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                />
+                <span>
+                  He leído y estoy de acuerdo con los{" "}
+                  <a href="/terminos" target="_blank" rel="noopener noreferrer" className="cot-terms-link">
+                    Términos y condiciones
+                  </a>{" "}
+                  <span className="cot-terms-req">*</span>
+                </span>
+              </label>
 
               <div className="cot-actions" style={{ justifyContent: "flex-start", marginTop: "1.5rem" }}>
                 <button className="btn-prev" onClick={() => setStep(2)}>← Atrás</button>

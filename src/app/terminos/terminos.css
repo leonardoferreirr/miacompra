@@ -1,0 +1,173 @@
+/* Página de Términos y Condiciones */
+:root {
+  --terms-ink: #0A1F5C;
+  --terms-ink-soft: rgba(10, 31, 92, 0.72);
+  --terms-cream: #FFF8E7;
+  --terms-paper: #FAF4DE;
+  --terms-yellow: #FDC60B;
+  --terms-line: rgba(10, 31, 92, 0.14);
+}
+
+.terms-page {
+  background: linear-gradient(180deg, var(--terms-cream), var(--terms-paper));
+  min-height: 100vh;
+  color: var(--terms-ink);
+  font-family: var(--font-primary, "Montserrat", system-ui, sans-serif);
+  padding: 0 1.4rem 5rem;
+}
+
+.terms-header {
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.6rem 0 2.4rem;
+  border-bottom: 1px solid var(--terms-line);
+}
+.terms-header .brand img {
+  height: 36px;
+  display: block;
+}
+.terms-header .back-link {
+  font-size: 0.92rem;
+  color: var(--terms-ink-soft);
+  text-decoration: none;
+  font-weight: 500;
+}
+.terms-header .back-link:hover {
+  color: var(--terms-ink);
+}
+
+.terms-wrap {
+  max-width: 760px;
+  margin: 2.4rem auto 0;
+  background: #fff;
+  border: 1px solid var(--terms-line);
+  border-radius: 18px;
+  padding: 2.8rem 2.4rem;
+  box-shadow: 0 30px 60px -36px rgba(10, 31, 92, 0.18);
+}
+
+.terms-wrap h1 {
+  font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.6rem;
+  color: var(--terms-ink);
+}
+.terms-wrap .lead {
+  font-size: 0.95rem;
+  color: var(--terms-ink-soft);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.terms-wrap h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-top: 2.4rem;
+  margin-bottom: 0.8rem;
+  color: var(--terms-ink);
+  letter-spacing: -0.01em;
+}
+.terms-wrap h3 {
+  font-size: 1.02rem;
+  font-weight: 600;
+  margin-top: 1.4rem;
+  margin-bottom: 0.4rem;
+  color: var(--terms-ink);
+}
+
+.terms-wrap p {
+  font-size: 0.96rem;
+  line-height: 1.65;
+  color: var(--terms-ink-soft);
+  margin-bottom: 0.85rem;
+}
+.terms-wrap p strong {
+  color: var(--terms-ink);
+  font-weight: 600;
+}
+.terms-wrap ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.9rem 0;
+}
+.terms-wrap ul li {
+  position: relative;
+  padding-left: 1.2rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--terms-ink-soft);
+}
+.terms-wrap ul li::before {
+  content: "·";
+  position: absolute;
+  left: 0.4rem;
+  top: -0.1rem;
+  color: var(--terms-yellow);
+  font-weight: 700;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.terms-wrap a {
+  color: var(--terms-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.terms-tip {
+  background: rgba(253, 198, 11, 0.12);
+  border-left: 3px solid var(--terms-yellow);
+  padding: 0.9rem 1.1rem;
+  border-radius: 6px;
+  margin: 1rem 0 1.2rem;
+  font-size: 0.92rem !important;
+}
+.terms-note {
+  background: rgba(10, 31, 92, 0.05);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.88rem !important;
+  font-style: italic;
+}
+
+.terms-footer-cta {
+  margin-top: 3rem;
+  padding-top: 1.8rem;
+  border-top: 1px solid var(--terms-line);
+  display: flex;
+  justify-content: center;
+}
+.btn-back-cot {
+  display: inline-flex;
+  align-items: center;
+  background: var(--terms-yellow);
+  color: var(--terms-ink);
+  padding: 0.85rem 1.5rem;
+  border-radius: 100px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 14px 30px -10px rgba(253, 198, 11, 0.5);
+  transition: transform 0.25s ease;
+}
+.btn-back-cot:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 720px) {
+  .terms-wrap {
+    padding: 2rem 1.5rem;
+  }
+  .terms-header {
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+}

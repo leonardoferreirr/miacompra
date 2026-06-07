@@ -490,3 +490,79 @@
   border: 2px solid var(--yellow);
   box-shadow: 0 24px 60px -28px rgba(253, 198, 11, 0.45);
 }
+
+/* Overlay no Stripe enquanto termos não aceitos */
+.cot-pay-area--locked {
+  position: relative;
+}
+.cot-pay-area--locked > *:not(.cot-pay-overlay) {
+  opacity: 0.35;
+  filter: grayscale(0.3);
+  pointer-events: none;
+  user-select: none;
+}
+.cot-pay-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 248, 231, 0.85);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  z-index: 10;
+}
+.cot-pay-overlay-card {
+  background: #fff;
+  border: 2px solid var(--yellow);
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  text-align: center;
+  max-width: 360px;
+  box-shadow: 0 18px 40px -16px rgba(253, 198, 11, 0.55);
+}
+.cot-pay-overlay-title {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+.cot-pay-overlay-sub {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+/* Checkbox de termos no final do form */
+.cot-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 1.6rem;
+  padding: 1rem 1.1rem;
+  background: rgba(253, 198, 11, 0.07);
+  border: 1px solid rgba(253, 198, 11, 0.35);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.cot-terms input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--yellow);
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.cot-terms-link {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.cot-terms-req {
+  color: #C99A00;
+  font-weight: 700;
+}
