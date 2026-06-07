@@ -58,9 +58,8 @@ export default function CotizadorPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          total: cotizacion.total,
-          detalle: cotizacion.detalle,
           envio: {
+            estadoUsaKey: s.estadoUsaKey,
             origen: `${s.ciudadUsa}, ${estadoUsa?.nombre}`,
             destino: `${s.ciudadVe}, ${s.estadoVeKey}`,
             modo: s.modo,
