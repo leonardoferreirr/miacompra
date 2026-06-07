@@ -26,6 +26,31 @@ export default function CotizadorPage() {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Persistência local: restaura form se cliente recarregar a página ou
+  // voltar depois. localStorage > cookie/IP — funciona offline, sem backend,
+  // e só fica no device do próprio cliente (privacidade ok).
+  const LS_KEY = "mia-cotizador-v1";
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.s) setS({ ...INITIAL_STATE, ...saved.s });
+        if (saved?.step && [1, 2, 3].includes(saved.step)) setStep(saved.step);
+      }
+    } catch {}
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ s, step }));
+    } catch {}
+  }, [s, step, hydrated]);
 
   function update<K extends keyof CotizacionState>(k: K, v: CotizacionState[K]) {
     setS((prev) => ({ ...prev, [k]: v }));
@@ -58,30 +83,58 @@ export default function CotizadorPage() {
     }
     return true;
   }, [s.modo, s.caja, s.pesoLb]);
-  const step3Ok = !!(s.email && s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
+  // step3Ok ainda é exportado para futura validação opcional, mas a UI
+  // não bloqueia mais o pagamento — o cliente pode pagar antes de
+  // preencher os dados do destinatário (Leonardo confirma por WhatsApp).
+  const step3Ok = !!(s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
 
-  // Auto-load do Stripe Embedded: cria a session assim que step 3 estiver
-  // preenchido e o user estiver no step 3. Debounce de 700ms pra esperar
-  // o user terminar de digitar antes de chamar a API.
-  const lastFingerprintRef = useRef<string>("");
+  // 1) Cria a session do Stripe assim que o cliente entra no step 3 com
+  // cotização válida. Regenera SOMENTE se o valor mudar (caja/peso/modo/
+  // estado). Email e dados do destinatário entram via update separado.
+  const valueFingerprintRef = useRef<string>("");
   useEffect(() => {
-    if (step !== 3 || !step3Ok || !cotizacion) return;
-    // Fingerprint = todos os campos que entram no payload. Se mudar, regera.
+    if (step !== 3 || !cotizacion) return;
     const fp = JSON.stringify({
       e: s.estadoUsaKey, cu: s.ciudadUsa, ev: s.estadoVeKey, cv: s.ciudadVe,
-      m: s.modo, c: s.caja, p: s.pesoLb,
-      em: s.email, n: s.nombre, ap: s.apellidos, d: s.direccion, apt: s.apartamento,
-      po: s.poblacion, pr: s.provincia, cp: s.cp, wa: s.whatsapp,
+      m: s.modo, c: s.caja, p: s.pesoLb, t: cotizacion.total,
     });
-    if (fp === lastFingerprintRef.current && clientSecret) return;
+    if (fp === valueFingerprintRef.current && clientSecret) return;
     const t = setTimeout(() => {
-      lastFingerprintRef.current = fp;
+      valueFingerprintRef.current = fp;
       setClientSecret(null);
+      setSessionId(null);
       handleCheckout();
-    }, 700);
+    }, 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, step3Ok, cotizacion?.total, s.email, s.nombre, s.apellidos, s.direccion, s.apartamento, s.poblacion, s.provincia, s.cp, s.whatsapp]);
+  }, [step, cotizacion?.total, s.estadoUsaKey, s.ciudadUsa, s.estadoVeKey, s.ciudadVe, s.modo, s.caja, s.pesoLb]);
+
+  // 2) Sincroniza metadata da session com os campos do destinatário
+  // conforme o cliente preenche. Debounce 800ms — não regenera session,
+  // só dá update do metadata (cheap, não invalida o embed).
+  useEffect(() => {
+    if (!sessionId) return;
+    const t = setTimeout(() => {
+      fetch("/api/update-checkout-metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          cliente: {
+            email: s.email,
+            nombre: `${s.nombre} ${s.apellidos}`.trim(),
+            direccion: `${s.direccion} ${s.apartamento}`.trim(),
+            poblacion: s.poblacion,
+            provincia: s.provincia,
+            cp: s.cp,
+            whatsapp: s.whatsapp,
+            notas: s.notas,
+          },
+        }),
+      }).catch(() => {});
+    }, 800);
+    return () => clearTimeout(t);
+  }, [sessionId, s.email, s.nombre, s.apellidos, s.direccion, s.apartamento, s.poblacion, s.provincia, s.cp, s.whatsapp, s.notas]);
 
   async function handleCheckout() {
     if (!cotizacion) return;
@@ -115,6 +168,7 @@ export default function CotizadorPage() {
       const data = await res.json();
       if (data.clientSecret) {
         setClientSecret(data.clientSecret);
+        if (data.sessionId) setSessionId(data.sessionId);
       } else {
         setErr(data.error || "No fue posible iniciar el pago.");
       }
@@ -283,26 +337,46 @@ export default function CotizadorPage() {
         {step === 3 && cotizacion && (
           <div className="cot-grid-3">
             <div className="cot-card">
-              <h2>Detalles del envío</h2>
-              <p className="sub">Completa tus datos y los del destinatario. El pago es 100% seguro vía Stripe.</p>
+              <h2>Paga ${cotizacion.total.toFixed(2)} USD</h2>
+              <p className="sub">Pago 100% seguro vía Stripe. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
 
-              <SectionTitle>Tus datos</SectionTitle>
-              <div className="field">
-                <label>Correo electrónico</label>
-                <input type="email" value={s.email} onChange={(e) => update("email", e.target.value)} placeholder="tu@correo.com" />
+              <div className="cot-pay-area cot-pay-area--top">
+                {submitting && !clientSecret && (
+                  <div className="cot-pay-hint">Cargando opciones de pago…</div>
+                )}
+                {!submitting && !clientSecret && (
+                  <div className="cot-pay-hint">Preparando el pago…</div>
+                )}
+                {clientSecret && (
+                  <EmbeddedCheckoutProvider
+                    stripe={stripePromise}
+                    options={{ clientSecret }}
+                  >
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                )}
               </div>
+
+              {err && (
+                <div style={{ background: "rgba(255,107,71,.12)", border: "1px solid rgba(255,107,71,.35)", color: "#ffa78e", borderRadius: 10, padding: "0.75rem 1rem", marginTop: "1rem", fontSize: ".88rem" }}>
+                  {err}
+                </div>
+              )}
+
+              <SectionTitle>Datos del destinatario en Venezuela</SectionTitle>
+              <p className="sub" style={{ marginTop: "-.4rem", marginBottom: "1rem" }}>
+                Para entregar la caja necesitamos estos datos. Si prefieres, puedes pagar primero y enviárnoslos por WhatsApp.
+              </p>
               <div className="row-2">
                 <div className="field">
                   <label>Nombre</label>
-                  <input value={s.nombre} onChange={(e) => update("nombre", e.target.value)} placeholder="Tu nombre" />
+                  <input value={s.nombre} onChange={(e) => update("nombre", e.target.value)} placeholder="Nombre del destinatario" />
                 </div>
                 <div className="field">
                   <label>Apellidos</label>
-                  <input value={s.apellidos} onChange={(e) => update("apellidos", e.target.value)} placeholder="Tus apellidos" />
+                  <input value={s.apellidos} onChange={(e) => update("apellidos", e.target.value)} placeholder="Apellidos del destinatario" />
                 </div>
               </div>
-
-              <SectionTitle>Dirección del destinatario (Venezuela)</SectionTitle>
               <div className="field">
                 <label>Dirección de la calle</label>
                 <input value={s.direccion} onChange={(e) => update("direccion", e.target.value)} placeholder="Nombre de la calle y número de la casa" />
@@ -336,33 +410,7 @@ export default function CotizadorPage() {
                 <textarea value={s.notas} onChange={(e) => update("notas", e.target.value)} placeholder="Notas para la entrega o el contenido de la caja…" />
               </div>
 
-              {err && (
-                <div style={{ background: "rgba(255,107,71,.12)", border: "1px solid rgba(255,107,71,.35)", color: "#ffa78e", borderRadius: 10, padding: "0.75rem 1rem", marginTop: "1rem", fontSize: ".88rem" }}>
-                  {err}
-                </div>
-              )}
-
-              <SectionTitle>Pago · ${cotizacion.total.toFixed(2)} USD</SectionTitle>
-              <div className="cot-pay-area">
-                {!step3Ok && (
-                  <div className="cot-pay-hint">
-                    Termina de rellenar tus datos arriba para ver las opciones de pago.
-                  </div>
-                )}
-                {step3Ok && submitting && !clientSecret && (
-                  <div className="cot-pay-hint">Cargando opciones de pago…</div>
-                )}
-                {step3Ok && clientSecret && (
-                  <EmbeddedCheckoutProvider
-                    stripe={stripePromise}
-                    options={{ clientSecret }}
-                  >
-                    <EmbeddedCheckout />
-                  </EmbeddedCheckoutProvider>
-                )}
-              </div>
-
-              <div className="cot-actions" style={{ justifyContent: "flex-start" }}>
+              <div className="cot-actions" style={{ justifyContent: "flex-start", marginTop: "1.5rem" }}>
                 <button className="btn-prev" onClick={() => setStep(2)}>← Atrás</button>
               </div>
             </div>

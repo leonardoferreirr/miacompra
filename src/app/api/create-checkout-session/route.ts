@@ -13,14 +13,17 @@ type Payload = {
     caja: string;
     pesoLb?: number | "";
   };
-  cliente: {
-    email: string;
-    nombre: string;
-    direccion: string;
-    poblacion: string;
-    provincia: string;
-    cp: string;
-    whatsapp: string;
+  // Cliente é opcional na CRIAÇÃO (step 3 do cotizador mostra o Stripe
+  // antes de preencher dados de destinatário). Os campos vão sendo
+  // atualizados via /api/update-checkout-metadata conforme o user digita.
+  cliente?: {
+    email?: string;
+    nombre?: string;
+    direccion?: string;
+    poblacion?: string;
+    provincia?: string;
+    cp?: string;
+    whatsapp?: string;
     notas?: string;
   };
 };
@@ -42,13 +45,10 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as Payload;
     const envio = body?.envio;
-    const cliente = body?.cliente;
+    const cliente = body?.cliente ?? {};
 
-    if (!envio || !cliente) {
-      return NextResponse.json({ error: "Datos incompletos." }, { status: 400 });
-    }
-    if (!isEmail(cliente.email)) {
-      return NextResponse.json({ error: "Correo electrónico inválido." }, { status: 400 });
+    if (!envio) {
+      return NextResponse.json({ error: "Datos de envío incompletos." }, { status: 400 });
     }
     if (!isModo(envio.modo)) {
       return NextResponse.json({ error: "Modo de envío inválido." }, { status: 400 });
@@ -116,7 +116,9 @@ export async function POST(req: Request) {
       // souber o billing country. Coletar billing destrava esses métodos
       // quando o cliente é dos EUA (público real do Mia Compra).
       billing_address_collection: "required",
-      customer_email: cliente.email,
+      // customer_email só vai se já foi preenchido. Caso contrário, Stripe
+      // coleta o email dentro do embed (campo "Contact information").
+      ...(isEmail(cliente.email) ? { customer_email: cliente.email } : {}),
       line_items: [
         {
           quantity: 1,
@@ -151,7 +153,7 @@ export async function POST(req: Request) {
       return_url: `${origin}/cotizador/gracias?session_id={CHECKOUT_SESSION_ID}`,
     });
 
-    return NextResponse.json({ clientSecret: session.client_secret });
+    return NextResponse.json({ clientSecret: session.client_secret, sessionId: session.id });
   } catch (e: any) {
     console.error("[create-checkout-session]", e?.message ?? e);
     return NextResponse.json(

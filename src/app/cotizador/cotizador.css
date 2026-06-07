@@ -481,3 +481,12 @@
   padding: 2.4rem 1rem;
   font-style: italic;
 }
+
+/* Quando a área de pagamento aparece no topo do step 3 */
+.cot-pay-area--top {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  min-height: 400px;
+  border: 2px solid var(--yellow);
+  box-shadow: 0 24px 60px -28px rgba(253, 198, 11, 0.45);
+}
