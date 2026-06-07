@@ -326,9 +326,24 @@ export default function CotizadorPage() {
               </div>
             )}
 
+            <label className="cot-terms">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+              />
+              <span>
+                He leído y estoy de acuerdo con los{" "}
+                <a href="/terminos" target="_blank" rel="noopener noreferrer" className="cot-terms-link">
+                  Términos y condiciones
+                </a>{" "}
+                <span className="cot-terms-req">*</span>
+              </span>
+            </label>
+
             <div className="cot-actions">
               <button className="btn-prev" onClick={() => setStep(1)}>← Atrás</button>
-              <button className="btn-next" disabled={!step2Ok} onClick={() => setStep(3)}>
+              <button className="btn-next" disabled={!step2Ok || !acceptedTerms} onClick={() => setStep(3)}>
                 Continuar al pago
                 <Arrow />
               </button>
@@ -342,7 +357,7 @@ export default function CotizadorPage() {
               <h2>Paga ${cotizacion.total.toFixed(2)} USD</h2>
               <p className="sub">Pago 100% seguro vía Stripe. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
 
-              <div className={`cot-pay-area cot-pay-area--top${acceptedTerms ? "" : " cot-pay-area--locked"}`}>
+              <div className="cot-pay-area cot-pay-area--top">
                 {submitting && !clientSecret && (
                   <div className="cot-pay-hint">Cargando opciones de pago…</div>
                 )}
@@ -356,14 +371,6 @@ export default function CotizadorPage() {
                   >
                     <EmbeddedCheckout />
                   </EmbeddedCheckoutProvider>
-                )}
-                {!acceptedTerms && (
-                  <div className="cot-pay-overlay">
-                    <div className="cot-pay-overlay-card">
-                      <div className="cot-pay-overlay-title">Acepta los términos para pagar</div>
-                      <div className="cot-pay-overlay-sub">Marca la casilla al final del formulario para habilitar el pago.</div>
-                    </div>
-                  </div>
                 )}
               </div>
 
@@ -419,21 +426,6 @@ export default function CotizadorPage() {
                 <label>Notas del pedido (opcional)</label>
                 <textarea value={s.notas} onChange={(e) => update("notas", e.target.value)} placeholder="Notas para la entrega o el contenido de la caja…" />
               </div>
-
-              <label className="cot-terms">
-                <input
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                />
-                <span>
-                  He leído y estoy de acuerdo con los{" "}
-                  <a href="/terminos" target="_blank" rel="noopener noreferrer" className="cot-terms-link">
-                    Términos y condiciones
-                  </a>{" "}
-                  <span className="cot-terms-req">*</span>
-                </span>
-              </label>
 
               <div className="cot-actions" style={{ justifyContent: "flex-start", marginTop: "1.5rem" }}>
                 <button className="btn-prev" onClick={() => setStep(2)}>← Atrás</button>
