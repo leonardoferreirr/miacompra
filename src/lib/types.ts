@@ -29,6 +29,7 @@ export type CotizacionState = {
   provincia: string;
   cp: string;
   whatsapp: string;
+  whatsapp2: string;
   notas: string;
 };
 
@@ -49,5 +50,6 @@ export const INITIAL_STATE: CotizacionState = {
   provincia: "",
   cp: "",
   whatsapp: "",
+  whatsapp2: "",
   notas: "",
 };

@@ -13,6 +13,7 @@ type Payload = {
     provincia?: string;
     cp?: string;
     whatsapp?: string;
+    whatsapp2?: string;
     notas?: string;
   };
 };
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
       cliente_provincia: str(cliente.provincia, 100),
       cliente_cp: str(cliente.cp, 20),
       cliente_whatsapp: str(cliente.whatsapp, 40),
+      cliente_whatsapp2: str(cliente.whatsapp2 ?? "", 40),
       cliente_notas: str(cliente.notas ?? "", 480),
     };
     if (cliente.email && typeof cliente.email === "string") {

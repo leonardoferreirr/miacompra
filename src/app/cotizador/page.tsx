@@ -77,8 +77,12 @@ export default function CotizadorPage() {
     });
   }, [s.estadoUsaKey, s.caja, s.modo, s.pesoLb]);
 
-  const step1Ok = !!(s.estadoUsaKey && s.ciudadUsa && s.estadoVeKey && s.ciudadVe);
-  const step2Ok = useMemo(() => {
+  const step1OriginOk = !!(s.estadoUsaKey && s.ciudadUsa && s.estadoVeKey && s.ciudadVe);
+  // step1Ok agora cobre TUDO do step 1 (origem+destino+carrinho+termos).
+  // Renomeado conceitualmente — antes era só origem/destino.
+  const step1Ok = !!(step1OriginOk && carrito.length > 0 && acceptedTerms);
+  // step1CajaOk: validação do form de caixa (modo+caja+peso) — antes era step2Ok.
+  const step1CajaOk = useMemo(() => {
     if (!s.modo || !s.caja) return false;
     const peso = typeof s.pesoLb === "number" ? s.pesoLb : 0;
     const max = CAJAS[s.caja as Caja].maxPesoAereoLb;
@@ -93,10 +97,11 @@ export default function CotizadorPage() {
     const peso = typeof s.pesoLb === "number" ? s.pesoLb : 0;
     return peso > CAJAS[s.caja as Caja].maxPesoAereoLb;
   }, [s.caja, s.pesoLb]);
-  // step3Ok ainda é exportado para futura validação opcional, mas a UI
-  // não bloqueia mais o pagamento — o cliente pode pagar antes de
-  // preencher os dados do destinatário (Leonardo confirma por WhatsApp).
-  const step3Ok = !!(s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
+  // Step 2 (contato): nombre + apellidos + direccion + poblacion + cp + whatsapp
+  // (whatsapp2 é opcional)
+  const step2Ok = !!(s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
+  // step3Ok mantido por compatibilidade — a UI do step 3 só mostra Stripe.
+  const step3Ok = step2Ok;
 
   // Total do carrinho (soma das caixas adicionadas).
   const totalCarrito = useMemo(
@@ -166,13 +171,14 @@ export default function CotizadorPage() {
             provincia: s.provincia,
             cp: s.cp,
             whatsapp: s.whatsapp,
+            whatsapp2: s.whatsapp2,
             notas: s.notas,
           },
         }),
       }).catch(() => {});
     }, 800);
     return () => clearTimeout(t);
-  }, [sessionId, s.email, s.nombre, s.apellidos, s.direccion, s.apartamento, s.poblacion, s.provincia, s.cp, s.whatsapp, s.notas]);
+  }, [sessionId, s.email, s.nombre, s.apellidos, s.direccion, s.apartamento, s.poblacion, s.provincia, s.cp, s.whatsapp, s.whatsapp2, s.notas]);
 
   async function handleCheckout() {
     if (carrito.length === 0) return;
@@ -201,6 +207,7 @@ export default function CotizadorPage() {
             provincia: s.provincia,
             cp: s.cp,
             whatsapp: s.whatsapp,
+            whatsapp2: s.whatsapp2,
             notas: s.notas,
           },
         }),
@@ -232,10 +239,12 @@ export default function CotizadorPage() {
         <Stepper step={step} />
 
         {step === 1 && (
+          <div className="cot-grid-3">
           <div className="cot-card">
-            <h2>¿De dónde sale y a dónde llega?</h2>
-            <p className="sub">El precio depende del estado de origen en Estados Unidos.</p>
+            <h2>¿De dónde sale y cómo es tu paquete?</h2>
+            <p className="sub">Origen y destino del envío, después configura las cajas. Puedes añadir varias.</p>
 
+            <SectionTitle>Origen y destino</SectionTitle>
             <div className="row-2">
               <div className="field">
                 <label>Estado de origen (EE.UU.)</label>
@@ -260,7 +269,7 @@ export default function CotizadorPage() {
               </div>
             </div>
 
-            <div className="row-2" style={{ marginTop: "1.5rem" }}>
+            <div className="row-2" style={{ marginTop: "1rem" }}>
               <div className="field">
                 <label>Estado de destino (Venezuela)</label>
                 <select value={s.estadoVeKey} onChange={(e) => { update("estadoVeKey", e.target.value); update("ciudadVe", ""); }}>
@@ -281,21 +290,7 @@ export default function CotizadorPage() {
               </div>
             </div>
 
-            <div className="cot-actions">
-              <span />
-              <button className="btn-next" disabled={!step1Ok} onClick={() => setStep(2)}>
-                Siguiente
-                <Arrow />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="cot-grid-3">
-          <div className="cot-card">
-            <h2>¿Cómo es tu paquete?</h2>
-            <p className="sub">Elige el tipo de envío y el tamaño de la caja. Puedes añadir varias cajas si quieres mandar más de una.</p>
+            <SectionTitle>Tu paquete</SectionTitle>
 
             <span className="field-label-top">Tipo de envío</span>
             <div className="radio-grid">
@@ -363,7 +358,7 @@ export default function CotizadorPage() {
               </div>
             )}
 
-            {cotizacion && step2Ok && (
+            {cotizacion && step1CajaOk && (
               <div className="resumen">
                 <div className="label">Precio de esta caja</div>
                 <div className="total">${cotizacion.total.toFixed(2)} <small>USD</small></div>
@@ -375,7 +370,7 @@ export default function CotizadorPage() {
             <div className="cot-actions" style={{ marginTop: "1rem" }}>
               <button
                 className="btn-add-cart"
-                disabled={!step2Ok}
+                disabled={!step1CajaOk}
                 onClick={addToCart}
                 type="button"
               >
@@ -399,15 +394,19 @@ export default function CotizadorPage() {
             </label>
 
             <div className="cot-actions">
-              <button className="btn-prev" onClick={() => setStep(1)}>← Atrás</button>
+              <span />
               <button
                 className="btn-next"
-                disabled={carrito.length === 0 || !acceptedTerms}
-                onClick={() => setStep(3)}
+                disabled={!step1Ok || !step1OriginOk}
+                onClick={() => setStep(2)}
               >
-                {carrito.length === 0
-                  ? "Añade una caja al carrito"
-                  : `Continuar al pago · $${totalCarrito.toFixed(2)} USD`}
+                {!step1OriginOk
+                  ? "Completa origen y destino"
+                  : carrito.length === 0
+                    ? "Añade una caja al carrito"
+                    : !acceptedTerms
+                      ? "Acepta los términos para continuar"
+                      : `Siguiente · $${totalCarrito.toFixed(2)} USD`}
                 <Arrow />
               </button>
             </div>
@@ -458,39 +457,12 @@ export default function CotizadorPage() {
           </div>
         )}
 
-        {step === 3 && carrito.length > 0 && (
+        {step === 2 && carrito.length > 0 && (
           <div className="cot-grid-3">
             <div className="cot-card">
-              <h2>Paga ${totalCarrito.toFixed(2)} USD</h2>
-              <p className="sub">Pago 100% seguro vía Stripe. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
+              <h2>Datos del destinatario en Venezuela</h2>
+              <p className="sub">Información de quien va a recibir tu caja. El segundo WhatsApp es opcional, pero ayuda si el primero no contesta.</p>
 
-              <div className="cot-pay-area cot-pay-area--top">
-                {submitting && !clientSecret && (
-                  <div className="cot-pay-hint">Cargando opciones de pago…</div>
-                )}
-                {!submitting && !clientSecret && (
-                  <div className="cot-pay-hint">Preparando el pago…</div>
-                )}
-                {clientSecret && (
-                  <EmbeddedCheckoutProvider
-                    stripe={stripePromise}
-                    options={{ clientSecret }}
-                  >
-                    <EmbeddedCheckout />
-                  </EmbeddedCheckoutProvider>
-                )}
-              </div>
-
-              {err && (
-                <div style={{ background: "rgba(255,107,71,.12)", border: "1px solid rgba(255,107,71,.35)", color: "#ffa78e", borderRadius: 10, padding: "0.75rem 1rem", marginTop: "1rem", fontSize: ".88rem" }}>
-                  {err}
-                </div>
-              )}
-
-              <SectionTitle>Datos del destinatario en Venezuela</SectionTitle>
-              <p className="sub" style={{ marginTop: "-.4rem", marginBottom: "1rem" }}>
-                Para entregar la caja necesitamos estos datos. Si prefieres, puedes pagar primero y enviárnoslos por WhatsApp.
-              </p>
               <div className="row-2">
                 <div className="field">
                   <label>Nombre</label>
@@ -519,20 +491,95 @@ export default function CotizadorPage() {
                   <input value={s.provincia || s.estadoVeKey} onChange={(e) => update("provincia", e.target.value)} />
                 </div>
               </div>
+              <div className="field">
+                <label>Código postal</label>
+                <input value={s.cp} onChange={(e) => update("cp", e.target.value)} />
+              </div>
               <div className="row-2">
                 <div className="field">
-                  <label>Código postal</label>
-                  <input value={s.cp} onChange={(e) => update("cp", e.target.value)} />
+                  <label>WhatsApp principal</label>
+                  <input value={s.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} placeholder="+58 ..." />
                 </div>
                 <div className="field">
-                  <label>WhatsApp del destinatario</label>
-                  <input value={s.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} placeholder="+58 ..." />
+                  <label>Segundo WhatsApp (opcional)</label>
+                  <input value={s.whatsapp2} onChange={(e) => update("whatsapp2", e.target.value)} placeholder="+58 ..." />
                 </div>
               </div>
               <div className="field">
                 <label>Notas del pedido (opcional)</label>
                 <textarea value={s.notas} onChange={(e) => update("notas", e.target.value)} placeholder="Notas para la entrega o el contenido de la caja…" />
               </div>
+
+              <div className="cot-actions" style={{ marginTop: "1.5rem" }}>
+                <button className="btn-prev" onClick={() => setStep(1)}>← Atrás</button>
+                <button
+                  className="btn-next"
+                  disabled={!step2Ok}
+                  onClick={() => setStep(3)}
+                >
+                  {step2Ok ? `Continuar al pago · $${totalCarrito.toFixed(2)} USD` : "Completa los datos obligatorios"}
+                  <Arrow />
+                </button>
+              </div>
+            </div>
+
+            <aside className="tu-pedido">
+              <h3>Tu pedido</h3>
+              <div className="row"><span className="k">Origen</span><span className="v">{s.ciudadUsa}, {estadoUsa?.nombre}</span></div>
+              <div className="row"><span className="k">Destino</span><span className="v">{s.ciudadVe}, {s.estadoVeKey}</span></div>
+              <div className="cart-divider" />
+              {carrito.map((it, idx) => (
+                <div className="cart-item cart-item--mini" key={it.id}>
+                  <div className="cart-item-head">
+                    <span className="cart-item-n">Caja {idx + 1}</span>
+                    <span className="cart-item-price-mini">${it.total.toFixed(2)}</span>
+                  </div>
+                  <div className="cart-item-meta">
+                    {it.modo === "maritimo" ? <><IconShip /> Marítimo</> : <><IconPlane /> Aéreo</>}
+                    {" · "}
+                    <IconBox /> {CAJAS[it.caja].dim}
+                    {it.modo === "aereo" && ` · ${it.pesoLb} lb`}
+                  </div>
+                </div>
+              ))}
+              <div className="row total-row"><span className="k">Total</span><span className="v">${totalCarrito.toFixed(2)}</span></div>
+              <div className="badges">
+                <span className="b"><IconCheck /> Seguro de $500 por caja</span>
+                <span className="b"><IconCheck /> Impuestos de aduana incluidos</span>
+                <span className="b"><IconCheck /> Entrega puerta a puerta</span>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {step === 3 && carrito.length > 0 && (
+          <div className="cot-grid-3">
+            <div className="cot-card">
+              <h2>Paga ${totalCarrito.toFixed(2)} USD</h2>
+              <p className="sub">Pago 100% seguro vía Stripe. Aceptamos tarjeta, Apple Pay, Google Pay, Link, Amazon Pay y Klarna.</p>
+
+              <div className="cot-pay-area cot-pay-area--top">
+                {submitting && !clientSecret && (
+                  <div className="cot-pay-hint">Cargando opciones de pago…</div>
+                )}
+                {!submitting && !clientSecret && (
+                  <div className="cot-pay-hint">Preparando el pago…</div>
+                )}
+                {clientSecret && (
+                  <EmbeddedCheckoutProvider
+                    stripe={stripePromise}
+                    options={{ clientSecret }}
+                  >
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                )}
+              </div>
+
+              {err && (
+                <div style={{ background: "rgba(255,107,71,.12)", border: "1px solid rgba(255,107,71,.35)", color: "#ffa78e", borderRadius: 10, padding: "0.75rem 1rem", marginTop: "1rem", fontSize: ".88rem" }}>
+                  {err}
+                </div>
+              )}
 
               <div className="cot-actions" style={{ justifyContent: "flex-start", marginTop: "1.5rem" }}>
                 <button className="btn-prev" onClick={() => setStep(2)}>← Atrás</button>
@@ -589,7 +636,7 @@ export default function CotizadorPage() {
 }
 
 function Stepper({ step }: { step: number }) {
-  const items = ["Origen y destino", "Paquete", "Pago"];
+  const items = ["Origen y paquete", "Contacto", "Pago"];
   return (
     <div className="stepper">
       {items.map((label, i) => {
