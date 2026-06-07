@@ -594,36 +594,37 @@
   cursor: not-allowed;
 }
 
-/* Preview do carrinho na sidebar */
-.cart-preview .cart-empty {
-  color: var(--ink-soft);
+/* Preview do carrinho na sidebar (sempre dentro de .tu-pedido com fundo
+   azul-escuro, então textos vão em branco/claro para ter contraste). */
+.tu-pedido .cart-empty {
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.9rem;
   line-height: 1.5;
   font-style: italic;
   margin: 0.5rem 0 1rem;
 }
-.cart-item {
+.tu-pedido .cart-item {
   padding: 0.85rem 0;
-  border-bottom: 1px dashed var(--line-light);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
 }
-.cart-item:last-of-type {
+.tu-pedido .cart-item:last-of-type {
   border-bottom: none;
 }
-.cart-item-head {
+.tu-pedido .cart-item-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.25rem;
 }
-.cart-item-n {
+.tu-pedido .cart-item-n {
   font-weight: 700;
   font-size: 0.92rem;
-  color: var(--ink);
+  color: #fff;
 }
-.cart-item-remove {
+.tu-pedido .cart-item-remove {
   background: transparent;
   border: none;
-  color: var(--ink-faint);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 1.6rem;
   line-height: 1;
   width: 26px;
@@ -635,51 +636,53 @@
   place-items: center;
   padding: 0;
 }
-.cart-item-remove:hover {
-  background: rgba(255, 107, 71, 0.15);
-  color: #ff6b47;
+.tu-pedido .cart-item-remove:hover {
+  background: rgba(255, 107, 71, 0.2);
+  color: #ff8a6e;
 }
-.cart-item-meta {
+.tu-pedido .cart-item-meta {
   font-size: 0.85rem;
-  color: var(--ink-soft);
+  color: rgba(255, 255, 255, 0.75);
   display: flex;
   align-items: center;
   gap: 0.25rem;
   flex-wrap: wrap;
 }
-.cart-item-meta svg {
+.tu-pedido .cart-item-meta svg {
   width: 14px;
   height: 14px;
+  color: rgba(255, 255, 255, 0.75);
 }
-.cart-item-price {
+.tu-pedido .cart-item-price {
   font-weight: 700;
-  color: var(--ink);
+  color: #fff;
   font-size: 1.05rem;
   margin-top: 0.25rem;
 }
-.cart-item-price-mini {
+.tu-pedido .cart-item-price-mini {
   font-weight: 700;
   font-size: 0.95rem;
-  color: var(--ink);
+  color: #fff;
 }
-.cart-item--mini {
+.tu-pedido .cart-item--mini {
   padding: 0.55rem 0;
 }
-.cart-divider {
+.tu-pedido .cart-divider {
   margin: 0.6rem 0;
-  border-top: 1px solid var(--line-light);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
-.cart-total {
+.tu-pedido .cart-total {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-top: 1rem;
   margin-top: 0.6rem;
-  border-top: 2px solid var(--ink);
+  border-top: 2px solid rgba(255, 255, 255, 0.5);
   font-weight: 700;
   font-size: 1.1rem;
-  color: var(--ink);
+  color: #fff;
 }
+.tu-pedido .cart-total > span:last-child { color: var(--yellow); }
 
 /* Aviso vermelho quando peso > limite da caja */
 .peso-error {
