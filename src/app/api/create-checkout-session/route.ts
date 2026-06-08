@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { CAJAS, ESTADOS_USA, cotizar, type Caja, type Modo } from "@/lib/rates";
+import { checkLimit, getCheckoutLimiter, getClientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -49,6 +50,15 @@ function str(v: unknown, max = 200): string {
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const limit = await checkLimit(getCheckoutLimiter(), ip);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espera unos segundos." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+      );
+    }
+
     const body = (await req.json()) as Payload;
     const envio = body?.envio;
     const items = body?.items;

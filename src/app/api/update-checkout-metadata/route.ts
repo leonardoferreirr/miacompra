@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { checkLimit, getClientIp, getMetadataLimiter } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,15 @@ function str(v: unknown, max = 200): string {
 // estará atualizado com os dados mais recentes do destinatário.
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const limit = await checkLimit(getMetadataLimiter(), ip);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: "Demasiados intentos." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+      );
+    }
+
     const body = (await req.json()) as Payload;
     if (!body?.sessionId || !body.sessionId.startsWith("cs_")) {
       return NextResponse.json({ error: "sessionId inválido." }, { status: 400 });
