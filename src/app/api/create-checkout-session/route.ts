@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { CAJAS, ESTADOS_USA, cotizar, type Caja, type Modo } from "@/lib/rates";
 import { checkLimit, getCheckoutLimiter, getClientIp } from "@/lib/ratelimit";
+import { originAllowed } from "@/lib/origin-check";
+import { createHash } from "crypto";
 
 export const runtime = "nodejs";
 
@@ -50,6 +52,9 @@ function str(v: unknown, max = 200): string {
 
 export async function POST(req: Request) {
   try {
+    if (!originAllowed(req)) {
+      return NextResponse.json({ error: "Origin not allowed." }, { status: 403 });
+    }
     const ip = getClientIp(req);
     const limit = await checkLimit(getCheckoutLimiter(), ip);
     if (!limit.ok) {
@@ -132,6 +137,17 @@ export async function POST(req: Request) {
     const stripe = new Stripe(key);
     const origin = req.headers.get("origin") ?? "https://miacompra.vercel.app";
 
+    // Idempotency key: hash de (IP + payload + janela de 60s). Se cliente
+    // double-clica ou re-tenta após network blip dentro de 1min, Stripe
+    // retorna a MESMA session em vez de criar duplicata. Janela curta evita
+    // colidir com nova compra legítima do mesmo cliente.
+    const timeBucket = Math.floor(Date.now() / 60_000);
+    const idemPayload = JSON.stringify({ envio, items: resolved, email: cliente.email ?? "" });
+    const idempotencyKey = createHash("sha256")
+      .update(`${ip}|${timeBucket}|${idemPayload}`)
+      .digest("hex")
+      .slice(0, 48);
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       // EMBEDDED checkout: o Stripe injeta o componente no site (step 3 do
@@ -190,7 +206,7 @@ export async function POST(req: Request) {
       // Em embedded mode usa-se return_url (pra onde o cliente vai DEPOIS
       // de pagar) em vez de success_url/cancel_url.
       return_url: `${origin}/cotizador/gracias?session_id={CHECKOUT_SESSION_ID}`,
-    });
+    }, { idempotencyKey });
 
     return NextResponse.json({ clientSecret: session.client_secret, sessionId: session.id });
   } catch (e: any) {

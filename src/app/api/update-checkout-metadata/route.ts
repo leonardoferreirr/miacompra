@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { checkLimit, getClientIp, getMetadataLimiter } from "@/lib/ratelimit";
+import { originAllowed } from "@/lib/origin-check";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,9 @@ function str(v: unknown, max = 200): string {
 // estará atualizado com os dados mais recentes do destinatário.
 export async function POST(req: Request) {
   try {
+    if (!originAllowed(req)) {
+      return NextResponse.json({ error: "Origin not allowed." }, { status: 403 });
+    }
     const ip = getClientIp(req);
     const limit = await checkLimit(getMetadataLimiter(), ip);
     if (!limit.ok) {
