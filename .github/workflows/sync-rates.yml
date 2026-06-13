@@ -1,0 +1,47 @@
+name: sync-rates
+
+# Mantém src/lib/rates-data.ts em sync com a planilha "Detalle Base" (fonte
+# única de tarifas). Roda no cron; se as tarifas mudarem, commita e o push
+# dispara o redeploy automático na Vercel. Sem mudança = não faz nada.
+#
+# O bot do WhatsApp lê a MESMA planilha ao vivo, então editar a planilha
+# atualiza os dois canais (bot na hora; site no próximo ciclo deste job).
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # a cada 30 min
+  workflow_dispatch: {} # permite rodar à mão pelo painel do GitHub
+
+permissions:
+  contents: write
+
+# Evita rodadas simultâneas pisando uma na outra
+concurrency:
+  group: sync-rates
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Regenera tarifas a partir da planilha
+        run: node scripts/generate-rates.mjs
+
+      - name: Commita e dá push se algo mudou
+        run: |
+          if [[ -n "$(git status --porcelain src/lib/rates-data.ts)" ]]; then
+            git config user.name "mia-rates-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add src/lib/rates-data.ts
+            git commit -m "chore(rates): sync tarifas da planilha Detalle Base"
+            git push
+            echo "Tarifas atualizadas e enviadas — Vercel vai redeployar."
+          else
+            echo "Sem mudanças nas tarifas."
+          fi
