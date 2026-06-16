@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { sendWhatsappText, buildPostPurchaseMessage } from "@/lib/zapi";
+import { isBotHandoffEnabled, notifyPurchaseBot } from "@/lib/bot-handoff";
 
 // Webhook precisa do raw body (não pode parsear).
 export const runtime = "nodejs";
@@ -60,20 +61,43 @@ export async function POST(req: Request) {
         },
       });
 
-      // Disparo automático de WhatsApp (Z-API): gracias + paso a paso.
-      // No bloquea ni rompe el webhook si falla o si faltan credenciales.
+      // Aviso de compra. Dos modos, nunca rompe el webhook:
+      //  1) Handoff al "Agente IA" (si BOT_PURCHASE_WEBHOOK_URL está seteada):
+      //     el bot envía el WhatsApp y guarda el contexto del cliente.
+      //  2) Fallback: el sitio envía directo por Z-API (gracias + paso a paso).
       if (m.cliente_whatsapp) {
-        const msg = buildPostPurchaseMessage({
-          nombre: m.cliente_nombre,
-          origen: m.origen,
-          destino: m.destino,
-          modo: m.modo,
-          caja: m.caja,
-          peso_lb: m.peso_lb,
-        });
-        await sendWhatsappText(m.cliente_whatsapp, msg).catch((e) =>
-          console.error("[webhook] Falló el disparo de WhatsApp.", e?.message),
-        );
+        if (isBotHandoffEnabled()) {
+          await notifyPurchaseBot({
+            event: "purchase.completed",
+            phone: m.cliente_whatsapp,
+            nombre: m.cliente_nombre ?? "",
+            envio: {
+              origen: m.origen ?? "",
+              destino: m.destino ?? "",
+              modo: m.modo ?? "",
+              caja: m.caja ?? "",
+              peso_lb: m.peso_lb ?? "",
+              detalle: m.detalle ?? "",
+            },
+            pago: {
+              session_id: s.id,
+              amount_total: s.amount_total,
+              currency: s.currency,
+            },
+          }).catch((e) => console.error("[webhook] Falló el handoff al bot.", e?.message));
+        } else {
+          const msg = buildPostPurchaseMessage({
+            nombre: m.cliente_nombre,
+            origen: m.origen,
+            destino: m.destino,
+            modo: m.modo,
+            caja: m.caja,
+            peso_lb: m.peso_lb,
+          });
+          await sendWhatsappText(m.cliente_whatsapp, msg).catch((e) =>
+            console.error("[webhook] Falló el disparo de WhatsApp.", e?.message),
+          );
+        }
       }
       break;
     }
