@@ -1,4 +1,8 @@
 import Link from "next/link";
+import Stripe from "stripe";
+import PurchasePixel from "./PurchasePixel";
+
+export const dynamic = "force-dynamic";
 
 type Step = {
   n: number;
@@ -40,7 +44,31 @@ const STEPS: Step[] = [
   },
 ];
 
-export default function GraciasPage() {
+export default async function GraciasPage({
+  searchParams,
+}: {
+  searchParams: { session_id?: string };
+}) {
+  // Purchase do Meta Pixel só dispara com pagamento confirmado (payment_status=paid),
+  // com o valor real da sessão Stripe. Falha ao recuperar não quebra a página.
+  let purchase: { value: number; currency: string; eventId: string } | null = null;
+  const sessionId = searchParams?.session_id;
+  if (sessionId && process.env.STRIPE_SECRET_KEY) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status === "paid" && session.amount_total != null) {
+        purchase = {
+          value: session.amount_total / 100,
+          currency: (session.currency ?? "usd").toUpperCase(),
+          eventId: session.id,
+        };
+      }
+    } catch {
+      // Recuperação falhou: não dispara Purchase.
+    }
+  }
+
   return (
     <main
       style={{
@@ -53,6 +81,9 @@ export default function GraciasPage() {
         fontFamily: "var(--ff)",
       }}
     >
+      {purchase && (
+        <PurchasePixel value={purchase.value} currency={purchase.currency} eventId={purchase.eventId} />
+      )}
       <div
         style={{
           width: "100%",

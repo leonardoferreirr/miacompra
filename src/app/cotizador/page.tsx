@@ -11,6 +11,7 @@ import "./cotizador.css";
 import { CAJAS, cotizar, ESTADOS_LIST, ESTADOS_USA, type Caja, type Modo } from "@/lib/rates";
 import { ESTADOS_VE_LIST } from "@/lib/venezuela";
 import { INITIAL_STATE, type CartItem, type CotizacionState } from "@/lib/types";
+import { fbTrack } from "@/lib/fbpixel";
 
 // Stripe.js carrega uma vez, fora do componente, e fica em cache.
 const stripePromise = loadStripe(
@@ -137,6 +138,16 @@ export default function CotizadorPage() {
   // carrinho não vazio. Regenera SOMENTE se o carrinho mudar (itens
   // adicionados/removidos). Email e dados do destinatário entram via
   // update separado.
+  // Meta Pixel: dispara ViewContent uma vez no load do cotizador.
+  useEffect(() => {
+    fbTrack("ViewContent");
+  }, []);
+
+  // Guardas pra não disparar Lead/InitiateCheckout repetido (o checkout
+  // pode regenerar a session conforme o cliente edita os dados).
+  const leadFiredRef = useRef(false);
+  const icFiredRef = useRef(false);
+
   const valueFingerprintRef = useRef<string>("");
   useEffect(() => {
     if (step !== 3 || carrito.length === 0) return;
@@ -221,6 +232,11 @@ export default function CotizadorPage() {
       if (data.clientSecret) {
         setClientSecret(data.clientSecret);
         if (data.sessionId) setSessionId(data.sessionId);
+        // Meta Pixel: Lead — link/sessão de pagamento gerada com sucesso.
+        if (!leadFiredRef.current) {
+          leadFiredRef.current = true;
+          fbTrack("Lead", { value: totalCarrito, currency: "USD" });
+        }
       } else {
         setErr(data.error || "No fue posible iniciar el pago.");
       }
@@ -517,7 +533,14 @@ export default function CotizadorPage() {
                 <button
                   className="btn-next"
                   disabled={!step2Ok}
-                  onClick={() => setStep(3)}
+                  onClick={() => {
+                    // Meta Pixel: InitiateCheckout — cliente avança pro pagamento.
+                    if (!icFiredRef.current) {
+                      icFiredRef.current = true;
+                      fbTrack("InitiateCheckout", { value: totalCarrito, currency: "USD" });
+                    }
+                    setStep(3);
+                  }}
                 >
                   {step2Ok ? `Continuar al pago · $${totalCarrito.toFixed(2)} USD` : "Completa los datos obligatorios"}
                   <Arrow />

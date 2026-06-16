@@ -5,11 +5,11 @@
 // 'unsafe-inline' + 'unsafe-eval' são necessárias pro Next.js client runtime.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com https://checkout.stripe.com https://*.stripe.com https://www.clarity.ms https://*.clarity.ms",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com https://checkout.stripe.com https://*.stripe.com https://www.clarity.ms https://*.clarity.ms https://connect.facebook.net",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://maps.stripe.com https://*.stripe.com https://*.upstash.io https://*.clarity.ms https://c.bing.com",
+  "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://maps.stripe.com https://*.stripe.com https://*.upstash.io https://*.clarity.ms https://c.bing.com https://www.facebook.com https://connect.facebook.net",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://*.stripe.com",
   "object-src 'none'",
   "base-uri 'self'",
