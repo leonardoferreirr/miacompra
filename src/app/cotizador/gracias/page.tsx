@@ -69,6 +69,14 @@ export default async function GraciasPage({
     }
   }
 
+  // CTA de WhatsApp: o CLIENTE inicia a conversa (abre a janela e libera a
+  // entrega do passo a passo pelo bot). Mensagem pré-preenchida + ref do pedido.
+  const waNumber = "17865502727";
+  const waMsg =
+    "¡Hola! Acabo de pagar mi envío en Mia Compra y quiero recibir mi información y los próximos pasos, por favor. 📦" +
+    (sessionId ? ` (Pedido: ${sessionId})` : "");
+  const waHref = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMsg)}`;
+
   return (
     <main
       style={{
@@ -226,33 +234,50 @@ export default async function GraciasPage({
         {/* Cierre */}
         <p
           style={{
-            fontSize: "0.9rem",
-            color: "rgba(10,31,92,0.55)",
+            fontSize: "0.95rem",
+            color: "rgba(10,31,92,0.66)",
             lineHeight: 1.6,
             textAlign: "center",
-            margin: "1.8rem 0 1.6rem",
+            margin: "1.8rem 0 1.4rem",
           }}
         >
-          Cualquier duda, te escribimos por WhatsApp y estamos disponibles para ayudarte.
+          Para recibir tu información y los próximos pasos, escríbenos por WhatsApp. Te respondemos enseguida.
         </p>
 
-        <div style={{ textAlign: "center" }}>
-          <Link
-            href="/"
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noreferrer"
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: ".55rem",
-              background: "var(--yellow)",
-              color: "#04123D",
-              padding: "1rem 1.8rem",
+              justifyContent: "center",
+              gap: ".6rem",
+              background: "#1FA855",
+              color: "#ffffff",
+              padding: "1.05rem 2rem",
               borderRadius: 100,
               fontWeight: 600,
-              fontSize: "0.95rem",
+              fontSize: "1rem",
+              textDecoration: "none",
+              boxShadow: "0 14px 34px -14px rgba(31,168,85,0.6)",
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.2-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.8-1.6-2.1-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5L8.8 7c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2 0 1.3.9 2.5 1.1 2.7.2.2 1.9 2.9 4.6 4 .6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.3-.6-.4M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2" />
+            </svg>
+            Recibir mi información por WhatsApp
+          </a>
+          <Link
+            href="/"
+            style={{
+              color: "rgba(10,31,92,0.55)",
+              fontSize: "0.9rem",
               textDecoration: "none",
             }}
           >
-            Volver al inicio →
+            Volver al inicio
           </Link>
         </div>
       </div>
