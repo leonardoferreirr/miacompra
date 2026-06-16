@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { sendWhatsappText, buildPostPurchaseMessage } from "@/lib/zapi";
 
 // Webhook precisa do raw body (não pode parsear).
 export const runtime = "nodejs";
@@ -58,6 +59,22 @@ export async function POST(req: Request) {
           notas: m.cliente_notas,
         },
       });
+
+      // Disparo automático de WhatsApp (Z-API): gracias + paso a paso.
+      // No bloquea ni rompe el webhook si falla o si faltan credenciales.
+      if (m.cliente_whatsapp) {
+        const msg = buildPostPurchaseMessage({
+          nombre: m.cliente_nombre,
+          origen: m.origen,
+          destino: m.destino,
+          modo: m.modo,
+          caja: m.caja,
+          peso_lb: m.peso_lb,
+        });
+        await sendWhatsappText(m.cliente_whatsapp, msg).catch((e) =>
+          console.error("[webhook] Falló el disparo de WhatsApp.", e?.message),
+        );
+      }
       break;
     }
     case "checkout.session.async_payment_succeeded":
