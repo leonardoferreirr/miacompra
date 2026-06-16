@@ -295,11 +295,11 @@ section{position:relative}
 .f-legal{padding-top:1.8rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.6rem;font-weight:300;font-size:.8rem;color:var(--on-dark-faint)}
 
 /* ============ WHATSAPP FLOAT ============ */
-.wfloat{position:fixed;bottom:1.6rem;right:1.6rem;z-index:90;display:inline-flex;align-items:center;background:#25d366;border-radius:100px;box-shadow:0 16px 38px -12px rgba(37,211,102,.6);transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
-.wfloat:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 22px 50px -12px rgba(37,211,102,.75)}
+.wfloat{position:fixed;bottom:1.6rem;right:1.6rem;z-index:90;display:inline-flex;align-items:center;background:#fff;border:1px solid rgba(10,31,92,.10);border-radius:100px;box-shadow:0 16px 38px -12px rgba(10,31,92,.28);transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+.wfloat:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 22px 50px -12px rgba(10,31,92,.34)}
 .wfloat .ic{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
-.wfloat svg{width:31px;height:31px;fill:#fff}
-.wfloat .lb{display:flex;flex-direction:column;line-height:1.1;color:#fff;padding:0 1.4rem 0 .3rem;white-space:nowrap}
+.wfloat svg{width:30px;height:30px;fill:none;stroke:var(--blue);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.wfloat .lb{display:flex;flex-direction:column;line-height:1.1;color:var(--blue);padding:0 1.4rem 0 .3rem;white-space:nowrap}
 .wfloat .lb b{font-weight:500;font-size:.9rem;letter-spacing:.02em}
 .wfloat .lb small{font-weight:300;font-size:.72rem;opacity:.9}
 
