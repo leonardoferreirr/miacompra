@@ -51,15 +51,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           fbq('init', '3860924050839203');
           fbq('track', 'PageView');`}
         </Script>
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=3860924050839203&ev=PageView&noscript=1"
-            alt=""
-          />
-        </noscript>
+        {/* Pixel noscript como HTML cru: evita que o React/Next hoiste um
+            <link rel="preload" as="image"> do tr?...noscript que competia com
+            o hero (LCP) no mobile. O fallback p/ JS desligado segue valendo. */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html:
+              '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=3860924050839203&ev=PageView&noscript=1" alt="" />',
+          }}
+        />
       </body>
     </html>
   );
