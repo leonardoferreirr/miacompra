@@ -40,6 +40,8 @@ export async function sendWhatsappText(phoneRaw: string, message: string): Promi
         "Client-Token": clientToken,
       },
       body: JSON.stringify({ phone, message }),
+      // Timeout: o webhook não pode ficar pendurado esperando o Z-API.
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!res.ok) {
@@ -61,19 +63,17 @@ export function buildPostPurchaseMessage(args: {
   nombre?: string;
   origen?: string;
   destino?: string;
-  modo?: string;
-  caja?: string;
-  peso_lb?: string;
+  resumen?: string; // ej: "Medium aérea 30 lb + Large marítima 45 lb"
+  cajas?: string; // cantidad de cajas
+  total_usd?: string;
 }): string {
   const nombre = (args.nombre ?? "").trim();
   const saludo = nombre ? `¡Hola ${nombre}!` : "¡Hola!";
 
   // Resumen compacto del envío (solo si hay datos).
-  const partes = [args.caja, args.modo, args.origen && args.destino ? `${args.origen} → ${args.destino}` : ""]
-    .map((p) => (p ?? "").trim())
-    .filter(Boolean);
-  const peso = (args.peso_lb ?? "").trim();
-  if (peso) partes.push(`${peso} lb`);
+  const ruta = args.origen && args.destino ? `${args.origen} → ${args.destino}` : "";
+  const detalle = (args.resumen ?? "").trim();
+  const partes = [detalle, ruta].filter(Boolean);
   const resumen = partes.length ? `\n\n📦 Tu envío: ${partes.join(" · ")}` : "";
 
   return (

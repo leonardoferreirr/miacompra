@@ -15,10 +15,9 @@ export type PurchasePayload = {
   envio: {
     origen: string;
     destino: string;
-    modo: string;
-    caja: string;
-    peso_lb: string;
-    detalle: string;
+    resumen: string; // ej: "Medium aérea 30 lb + Large marítima 45 lb"
+    cajas: string; // cantidad de cajas
+    total_usd: string;
   };
   pago: {
     session_id: string;
@@ -41,14 +40,23 @@ export async function notifyPurchaseBot(payload: PurchasePayload): Promise<Notif
     return { ok: false, skipped: true };
   }
 
+  // Nunca dispara sem autenticação: se a URL existe mas o segredo não, é erro
+  // de config — falha em vez de mandar um POST que o bot vai (ou deveria) rejeitar.
+  if (!secret) {
+    console.error("[bot-handoff] BOT_PURCHASE_WEBHOOK_URL setada sem BOT_PURCHASE_WEBHOOK_SECRET. Abortando.");
+    return { ok: false, error: "missing_secret" };
+  }
+
   try {
     const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(secret ? { "X-Mia-Secret": secret } : {}),
+        "X-Mia-Secret": secret,
       },
       body: JSON.stringify(payload),
+      // Timeout: o webhook do Stripe não pode ficar pendurado esperando o bot.
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!res.ok) {

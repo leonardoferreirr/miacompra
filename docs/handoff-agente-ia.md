@@ -25,24 +25,30 @@ endpoint da Agente IA, **se** a env `BOT_PURCHASE_WEBHOOK_URL` estiver setada.
   "nombre": "María",
   "envio": {
     "origen": "Miami, FL",
-    "destino": "Caracas",
-    "modo": "aéreo",
-    "caja": "Medium",
-    "peso_lb": "30",
-    "detalle": "ropa y electrónicos"
+    "destino": "Caracas, Distrito Capital",
+    "resumen": "Medium aérea 30 lb + Large marítima 45 lb",
+    "cajas": "2",
+    "total_usd": "211.45"
   },
   "pago": {
     "session_id": "cs_test_123",
-    "amount_total": 12345,
+    "amount_total": 21145,
     "currency": "usd"
   }
 }
 ```
 
+> **Mudança de contrato (2026-06-17):** o carrinho virou multi-caixa. O `envio` NÃO traz mais
+> `modo`/`caja`/`peso_lb`/`detalle` (um pedido pode ter várias caixas). Agora traz:
+> - `resumen` — string legível com todas as caixas (ex.: `"Medium aérea 30 lb + Large marítima 45 lb"`). Use esta no `📦 Tu envío:`.
+> - `cajas` — quantidade de caixas (string).
+> - `total_usd` — total do pedido em dólares (string, ex.: `"211.45"`).
+
 Notas:
-- `phone` vem **só com dígitos, com código de país** (ex.: Venezuela = `58...`). Já normalizado.
-- `amount_total` é em centavos (ex.: `12345` = `$123.45`).
+- `phone` vem **só com dígitos, com código de país** (ex.: Venezuela = `58...`). Já normalizado. É o WhatsApp do **destinatário** — o casamento do pedido é por `pago.session_id`, não por telefone.
+- `amount_total` é em centavos (ex.: `21145` = `$211.45`).
 - Campos de `envio` podem vir vazios (`""`) se o cliente não preencheu.
+- O site agora dispara o evento **só depois do pagamento confirmado** (inclusive Klarna/Amazon Pay, que confirmam de forma assíncrona) e **só uma vez por compra** (idempotência por sessão). O bot pode manter o seu anti-duplicata como segunda camada.
 
 ---
 
@@ -69,7 +75,7 @@ Manda **esta** mensagem (mantém o texto consistente com a thank you page do sit
 ```
 ¡Hola {nombre}! 🎉 Recibimos tu pago en Mia Compra, tu envío ya está confirmado.
 
-📦 Tu envío: {caja} · {modo} · {origen} → {destino} · {peso_lb} lb
+📦 Tu envío: {resumen} · {origen} → {destino}
 
 Esto es lo que sigue:
 1️⃣ *Preparamos tu etiqueta FedEx* — nuestro equipo la genera y te la envía por aquí y por correo en las próximas horas.

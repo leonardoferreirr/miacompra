@@ -194,6 +194,13 @@ export async function POST(req: Request) {
         ),
         cart_total_usd: totalGeral.toFixed(2),
         cart_count: String(resolved.length),
+        // Resumo legível pro WhatsApp pós-compra (lido pelo webhook/handoff).
+        cart_resumen: str(
+          resolved
+            .map((r) => `${r.caja} ${r.modo === "maritimo" ? "marítima" : "aérea"}${r.pesoLb ? ` ${r.pesoLb} lb` : ""}`)
+            .join(" + "),
+          300
+        ),
         cliente_nombre: str(cliente.nombre, 200),
         cliente_direccion: str(cliente.direccion, 200),
         cliente_poblacion: str(cliente.poblacion, 100),
