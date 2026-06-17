@@ -46,6 +46,10 @@ function isCaja(v: unknown): v is Caja {
 function isEmail(v: unknown): v is string {
   return typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
+function isPhone(v: unknown): boolean {
+  const d = (typeof v === "string" ? v : "").replace(/\D+/g, "");
+  return d.length >= 8 && d.length <= 15;
+}
 function str(v: unknown, max = 200): string {
   return (typeof v === "string" ? v : "").slice(0, max).trim();
 }
@@ -77,6 +81,10 @@ export async function POST(req: Request) {
     }
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Carrito vacío." }, { status: 400 });
+    }
+    // WhatsApp é o canal de entrega do pós-compra: se vier, precisa ser válido.
+    if (cliente.whatsapp && !isPhone(cliente.whatsapp)) {
+      return NextResponse.json({ error: "WhatsApp inválido. Usa el código de país, ej: +58 412 123 4567." }, { status: 400 });
     }
 
     // Valida cada item e recalcula o valor server-side (fonte única de verdade).

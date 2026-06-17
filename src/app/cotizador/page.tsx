@@ -21,6 +21,12 @@ const stripePromise = loadStripe(
 const WA_NUMBER = "17865502727"; // +1 786 550-2727 — Mia Compra suporte
 const WA_MSG = "Hola Mia Compra, tengo una duda sobre mi cotización.";
 
+/** Teléfono plausible: 8–15 dígitos (cubre +58 Venezuela y +1 EE.UU). */
+function isPhone(v: string | undefined | null): boolean {
+  const d = (v ?? "").replace(/\D+/g, "");
+  return d.length >= 8 && d.length <= 15;
+}
+
 export default function CotizadorPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [s, setS] = useState<CotizacionState>(INITIAL_STATE);
@@ -104,7 +110,7 @@ export default function CotizadorPage() {
   }, [s.caja, s.pesoLb]);
   // Step 2 (contato): nombre + apellidos + direccion + poblacion + cp + whatsapp
   // (whatsapp2 é opcional)
-  const step2Ok = !!(s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && s.whatsapp);
+  const step2Ok = !!(s.nombre && s.apellidos && s.direccion && s.poblacion && s.cp && isPhone(s.whatsapp));
   // step3Ok mantido por compatibilidade — a UI do step 3 só mostra Stripe.
   const step3Ok = step2Ok;
 
@@ -517,6 +523,11 @@ export default function CotizadorPage() {
                 <div className="field">
                   <label>WhatsApp principal</label>
                   <input value={s.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} placeholder="+58 ..." />
+                  {s.whatsapp && !isPhone(s.whatsapp) && (
+                    <span style={{ display: "block", marginTop: ".35rem", fontSize: ".78rem", color: "#c0492b" }}>
+                      Escribe el número con código de país, ej: +58 412 123 4567.
+                    </span>
+                  )}
                 </div>
                 <div className="field">
                   <label>Segundo WhatsApp (opcional)</label>
@@ -587,7 +598,7 @@ export default function CotizadorPage() {
                 {submitting && !clientSecret && (
                   <div className="cot-pay-hint">Cargando opciones de pago…</div>
                 )}
-                {!submitting && !clientSecret && (
+                {!submitting && !clientSecret && !err && (
                   <div className="cot-pay-hint">Preparando el pago…</div>
                 )}
                 {clientSecret && (
@@ -602,7 +613,16 @@ export default function CotizadorPage() {
 
               {err && (
                 <div style={{ background: "rgba(255,107,71,.12)", border: "1px solid rgba(255,107,71,.35)", color: "#ffa78e", borderRadius: 10, padding: "0.75rem 1rem", marginTop: "1rem", fontSize: ".88rem" }}>
-                  {err}
+                  <div>{err}</div>
+                  <button
+                    onClick={() => {
+                      valueFingerprintRef.current = "";
+                      handleCheckout();
+                    }}
+                    style={{ marginTop: ".7rem", background: "#FFC400", color: "#04123D", border: "none", borderRadius: 8, padding: ".55rem 1.1rem", fontWeight: 600, fontSize: ".85rem", cursor: "pointer" }}
+                  >
+                    Reintentar
+                  </button>
                 </div>
               )}
 
