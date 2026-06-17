@@ -217,7 +217,7 @@ section{position:relative}
 .enviar .note{margin-top:1.8rem;font-weight:400;font-size:.95rem;color:var(--ink-soft);max-width:30rem;line-height:1.55}
 .enviar-media{position:relative}
 .enviar-photo{border-radius:30px;overflow:hidden;box-shadow:0 50px 90px -40px rgba(4,18,61,.55);position:relative}
-.enviar-photo img{width:100%;display:block}
+.enviar-photo img{width:100%;height:auto;display:block}
 .enviar-tag{position:absolute;left:22px;bottom:22px;background:rgba(255,248,231,.92);backdrop-filter:blur(8px);padding:.7rem 1.05rem;border-radius:13px;font-weight:500;font-size:.82rem;color:var(--blue);box-shadow:0 12px 30px -14px rgba(4,18,61,.4)}
 /* chips: duas linhas em carrossel infinito (direções opostas) */
 .chip-marq{margin-top:3.4rem;display:flex;flex-direction:column;gap:1rem;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
