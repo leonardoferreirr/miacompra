@@ -21,7 +21,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <head>
-        <link rel="preload" as="image" href="/assets/hero-abuela.webp" fetchPriority="high" />
+        <link
+          rel="preload"
+          as="image"
+          href="/assets/hero-abuela.webp"
+          imageSrcSet="/assets/hero-abuela-960.webp 960w, /assets/hero-abuela.webp 1920w"
+          imageSizes="100vw"
+          fetchPriority="high"
+        />
         <link
           rel="preload"
           as="font"
