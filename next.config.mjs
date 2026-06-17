@@ -6,9 +6,9 @@
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com https://checkout.stripe.com https://*.stripe.com https://www.clarity.ms https://*.clarity.ms https://connect.facebook.net",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' https://fonts.gstatic.com data:",
+  "font-src 'self' data:",
   "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://maps.stripe.com https://*.stripe.com https://*.upstash.io https://*.clarity.ms https://c.bing.com https://www.facebook.com https://connect.facebook.net",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://*.stripe.com",
   "object-src 'none'",
@@ -36,6 +36,13 @@ const nextConfig = {
         headers: [
           { key: "Content-Type", value: "text/plain; charset=utf-8" },
           { key: "Cache-Control", value: "no-cache" },
+        ],
+      },
+      {
+        // Fonte self-hosted: imutável, cache de 1 ano (renomear o arquivo se trocar).
+        source: "/fonts/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
       {
