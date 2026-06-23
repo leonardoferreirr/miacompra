@@ -611,6 +611,19 @@ export default function CotizadorPage() {
                 )}
               </div>
 
+              <a
+                className="cot-wa-help"
+                href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hola Mia Compra, tengo una duda con el pago.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: "flex", alignItems: "center", gap: ".6rem", marginTop: "1rem", background: "rgba(55,179,74,.12)", border: "1px solid rgba(55,179,74,.4)", borderRadius: 10, padding: ".75rem .9rem", color: "#2e9a3f", fontWeight: 600, fontSize: ".9rem", textDecoration: "none" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flex: "none" }}>
+                  <path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4a7.95 7.95 0 0 0-6.94 11.92L4 20l4.2-1.1a7.94 7.94 0 0 0 3.85.98h.01a7.94 7.94 0 0 0 5.54-13.56zm-5.55 12.21h-.01a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.49.65.66-2.43-.15-.25a6.61 6.61 0 0 1 10.27-8.16 6.55 6.55 0 0 1 1.93 4.66 6.62 6.62 0 0 1-6.61 6.59zm3.62-4.94c-.2-.1-1.18-.58-1.36-.64-.18-.07-.32-.1-.45.1-.13.2-.51.64-.62.77-.12.13-.23.15-.43.05a5.43 5.43 0 0 1-1.6-.99 6 6 0 0 1-1.1-1.38c-.12-.2-.01-.3.09-.4l.3-.36c.1-.12.13-.2.2-.33.06-.13.03-.25-.02-.35l-.61-1.48c-.16-.4-.33-.34-.45-.34l-.39-.01c-.13 0-.35.05-.53.25a2.13 2.13 0 0 0-.67 1.59c0 .94.68 1.84.78 1.98.1.13 1.34 2.04 3.25 2.86.45.2.81.31 1.09.4.46.15.87.13 1.2.08.37-.06 1.13-.46 1.29-.91.16-.45.16-.83.11-.91-.05-.08-.18-.13-.38-.23z" />
+                </svg>
+                ¿Dudas con el pago? Escríbenos por WhatsApp
+              </a>
+
               {err && (
                 <div style={{ background: "rgba(255,107,71,.12)", border: "1px solid rgba(255,107,71,.35)", color: "#ffa78e", borderRadius: 10, padding: "0.75rem 1rem", marginTop: "1rem", fontSize: ".88rem" }}>
                   <div>{err}</div>
