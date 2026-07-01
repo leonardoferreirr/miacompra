@@ -1,0 +1,288 @@
+/* Casillero — procedimiento interno. Identidad del cotizador/terminos:
+   fondo crema, tinta azul marino, tarjeta blanca, acentos amarillos. */
+.cas-page {
+  --ink: #0A1F5C;
+  --ink-2: #04123D;
+  --ink-soft: rgba(10, 31, 92, 0.72);
+  --ink-faint: rgba(10, 31, 92, 0.5);
+  --cream: #FFF8E7;
+  --paper: #FAF4DE;
+  --yellow: #FDC60B;
+  --green: #1F9D55;
+  --line: rgba(10, 31, 92, 0.14);
+
+  background: linear-gradient(180deg, var(--cream), var(--paper));
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-primary, "Montserrat", system-ui, sans-serif);
+  padding: 0 1.4rem 5rem;
+}
+
+/* Header */
+.cas-header {
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.6rem 0 2.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.cas-header .brand img {
+  height: 36px;
+  display: block;
+}
+.cas-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: rgba(10, 31, 92, 0.06);
+  border: 1px solid var(--line);
+  padding: 0.4rem 0.75rem;
+  border-radius: 100px;
+}
+
+/* Card */
+.cas-wrap {
+  max-width: 760px;
+  margin: 2.4rem auto 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 2.8rem 2.4rem;
+  box-shadow: 0 30px 60px -36px rgba(10, 31, 92, 0.18);
+}
+.cas-wrap h1 {
+  font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.6rem;
+  color: var(--ink);
+}
+.cas-wrap .lead {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin-bottom: 2.2rem;
+  line-height: 1.6;
+}
+
+/* Timeline de pasos */
+.cas-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cas-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 1.1rem;
+  padding-bottom: 2.2rem;
+}
+/* línea vertical que conecta los pasos */
+.cas-step::before {
+  content: "";
+  position: absolute;
+  left: 21px;
+  top: 44px;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+.cas-step:last-child { padding-bottom: 0; }
+.cas-step:last-child::before { display: none; }
+
+.cas-num {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 1.05rem;
+  background: var(--ink-2);
+  color: #fff;
+  box-shadow: 0 0 0 5px rgba(10, 31, 92, 0.08);
+  position: relative;
+  z-index: 1;
+}
+
+.cas-body { padding-top: 0.35rem; min-width: 0; }
+.cas-body h2 {
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 0.7rem;
+}
+.cas-body h3 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 1.1rem 0 0.5rem;
+}
+.cas-body p {
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 0.7rem;
+}
+
+/* Listas con viñeta amarilla */
+.cas-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.4rem;
+}
+.cas-list li {
+  position: relative;
+  padding-left: 1.2rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.cas-list li::before {
+  content: "·";
+  position: absolute;
+  left: 0.35rem;
+  top: -0.12rem;
+  color: var(--yellow);
+  font-weight: 700;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.cas-list--cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1.4rem;
+}
+
+/* Checklist de validación (paso 6) */
+.cas-check {
+  list-style: none;
+  padding: 0;
+  margin: 0.2rem 0 0.4rem;
+}
+.cas-check li {
+  position: relative;
+  padding-left: 1.7rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 500;
+}
+.cas-check li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Chips (tipo de cliente) */
+.cas-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.cas-chips span {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: rgba(253, 198, 11, 0.14);
+  border: 1px solid rgba(253, 198, 11, 0.5);
+  padding: 0.4rem 0.85rem;
+  border-radius: 100px;
+}
+
+/* Ruta de módulo (paso 4) */
+.cas-path {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  background: rgba(10, 31, 92, 0.05);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.6rem 1rem !important;
+}
+.cas-path span { color: var(--yellow); font-weight: 700; }
+
+/* Dirección de ejemplo (paso 7) */
+.cas-address {
+  font-style: normal;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: linear-gradient(135deg, #FFF8E7, #FAF4DE);
+  border: 1px dashed rgba(253, 198, 11, 0.7);
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+  margin: 0.2rem 0 0.9rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.cas-address-co { font-weight: 700; }
+.cas-address em { font-style: normal; color: var(--ink-faint); }
+
+/* Callouts */
+.cas-callout {
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin: 0.6rem 0 0.2rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.cas-callout strong { font-weight: 700; }
+.cas-callout--warn {
+  background: rgba(10, 31, 92, 0.05);
+  border-left: 3px solid var(--ink-2);
+}
+.cas-callout--key {
+  background: rgba(253, 198, 11, 0.14);
+  border-left: 3px solid var(--yellow);
+}
+
+/* Footer */
+.cas-footer {
+  margin-top: 2.6rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+}
+.cas-footer p {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.cas-footer a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+  .cas-wrap { padding: 2rem 1.4rem; }
+  .cas-header { flex-direction: column; gap: 0.8rem; align-items: flex-start; }
+  .cas-list--cols { grid-template-columns: 1fr; }
+  .cas-step { grid-template-columns: 38px 1fr; gap: 0.9rem; }
+  .cas-step::before { left: 18px; }
+  .cas-num { width: 38px; height: 38px; font-size: 0.98rem; }
+}
